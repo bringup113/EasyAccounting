@@ -1,0 +1,137 @@
+/* 统计报表页面样式 */
+.reports-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* 控制面板样式 */
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+.date-range-picker {
+  min-width: 280px;
+}
+
+/* 统计数据样式 */
+.stats-overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  flex: 1;
+  min-width: 200px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-income {
+  border-left: 4px solid #52c41a;
+}
+
+.stat-expense {
+  border-left: 4px solid #f5222d;
+}
+
+.stat-balance {
+  border-left: 4px solid #1890ff;
+}
+
+/* 图表容器样式 */
+.chart-container {
+  margin-bottom: 24px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 12px;
+}
+
+/* 标签页样式 */
+.report-tabs .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.report-tabs .ant-tabs-tab {
+  padding: 12px 16px;
+}
+
+.report-tabs .ant-tabs-tab-btn {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.report-tabs .ant-tabs-tab-btn .anticon {
+  margin-right: 8px;
+}
+
+/* 图表图标样式 */
+.chart-icon {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+/* 空状态样式 */
+.empty-container {
+  padding: 48px 0;
+  text-align: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .report-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-range-picker {
+    width: 100%;
+  }
+  
+  .stats-overview {
+    flex-direction: column;
+  }
+  
+  .stat-item {
+    width: 100%;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .chart-controls {
+    margin-top: 12px;
+  }
+} 

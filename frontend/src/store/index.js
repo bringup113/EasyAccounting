@@ -3,20 +3,26 @@ import authReducer from './authSlice';
 import bookReducer from './bookSlice';
 import transactionReducer from './transactionSlice';
 import categoryReducer from './categorySlice';
+import accountReducer from './accountSlice';
 import tagReducer from './tagSlice';
 import personReducer from './personSlice';
-import accountReducer from './accountSlice';
+import notificationReducer from './notificationSlice';
+import settingsReducer from './settingsSlice';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     auth: authReducer,
     books: bookReducer,
     transactions: transactionReducer,
     categories: categoryReducer,
+    accounts: accountReducer,
     tags: tagReducer,
     persons: personReducer,
-    accounts: accountReducer,
+    notifications: notificationReducer,
+    settings: settingsReducer
   },
-});
-
-export default store; 
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+}); 

@@ -1,0 +1,65 @@
+// 认证相关
+export const REGISTER_SUCCESS = 'REGISTER_SUCCESS';
+export const REGISTER_FAIL = 'REGISTER_FAIL';
+export const USER_LOADED = 'USER_LOADED';
+export const AUTH_ERROR = 'AUTH_ERROR';
+export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
+export const LOGIN_FAIL = 'LOGIN_FAIL';
+export const LOGOUT = 'LOGOUT';
+export const CLEAR_ERRORS = 'CLEAR_ERRORS';
+
+// 账本相关
+export const GET_BOOKS = 'GET_BOOKS';
+export const GET_BOOK = 'GET_BOOK';
+export const ADD_BOOK = 'ADD_BOOK';
+export const UPDATE_BOOK = 'UPDATE_BOOK';
+export const DELETE_BOOK = 'DELETE_BOOK';
+export const SET_CURRENT_BOOK = 'SET_CURRENT_BOOK';
+export const CLEAR_CURRENT_BOOK = 'CLEAR_CURRENT_BOOK';
+export const BOOK_ERROR = 'BOOK_ERROR';
+
+// 账户相关
+export const GET_ACCOUNTS = 'GET_ACCOUNTS';
+export const GET_ACCOUNT = 'GET_ACCOUNT';
+export const ADD_ACCOUNT = 'ADD_ACCOUNT';
+export const UPDATE_ACCOUNT = 'UPDATE_ACCOUNT';
+export const DELETE_ACCOUNT = 'DELETE_ACCOUNT';
+export const SET_CURRENT_ACCOUNT = 'SET_CURRENT_ACCOUNT';
+export const CLEAR_CURRENT_ACCOUNT = 'CLEAR_CURRENT_ACCOUNT';
+export const ACCOUNT_ERROR = 'ACCOUNT_ERROR';
+
+// 交易相关
+export const GET_TRANSACTIONS = 'GET_TRANSACTIONS';
+export const GET_TRANSACTION = 'GET_TRANSACTION';
+export const ADD_TRANSACTION = 'ADD_TRANSACTION';
+export const UPDATE_TRANSACTION = 'UPDATE_TRANSACTION';
+export const DELETE_TRANSACTION = 'DELETE_TRANSACTION';
+export const SET_CURRENT_TRANSACTION = 'SET_CURRENT_TRANSACTION';
+export const CLEAR_CURRENT_TRANSACTION = 'CLEAR_CURRENT_TRANSACTION';
+export const FILTER_TRANSACTIONS = 'FILTER_TRANSACTIONS';
+export const CLEAR_FILTER = 'CLEAR_FILTER';
+export const TRANSACTION_ERROR = 'TRANSACTION_ERROR';
+
+// 预算相关
+export const GET_BUDGETS = 'GET_BUDGETS';
+export const GET_BUDGET = 'GET_BUDGET';
+export const ADD_BUDGET = 'ADD_BUDGET';
+export const UPDATE_BUDGET = 'UPDATE_BUDGET';
+export const DELETE_BUDGET = 'DELETE_BUDGET';
+export const SET_CURRENT_BUDGET = 'SET_CURRENT_BUDGET';
+export const CLEAR_CURRENT_BUDGET = 'CLEAR_CURRENT_BUDGET';
+export const BUDGET_ERROR = 'BUDGET_ERROR';
+
+// 设置相关
+export const SET_LANGUAGE = 'SET_LANGUAGE';
+export const SET_THEME = 'SET_THEME';
+export const SET_CURRENCY = 'SET_CURRENCY';
+export const SETTINGS_ERROR = 'SETTINGS_ERROR';
+
+// 报表相关
+export const GET_REPORTS = 'GET_REPORTS';
+export const REPORT_ERROR = 'REPORT_ERROR';
+
+// 警告相关
+export const SET_ALERT = 'SET_ALERT';
+export const REMOVE_ALERT = 'REMOVE_ALERT'; 

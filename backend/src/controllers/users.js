@@ -6,23 +6,52 @@ const User = require('../models/User');
 exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    const lowerEmail = email.toLowerCase();
 
-    // 检查用户是否已存在
-    let user = await User.findOne({ email });
-    if (user) {
+    // 检查用户名是否已存在
+    let existingUserByName = await User.findOne({ username });
+    if (existingUserByName) {
+      return res.status(400).json({ success: false, message: '用户名已被使用，请选择其他用户名' });
+    }
+
+    // 检查邮箱是否已存在
+    let existingUserByEmail = await User.findOne({ email: lowerEmail });
+    if (existingUserByEmail) {
       return res.status(400).json({ success: false, message: '邮箱已被注册' });
     }
 
     // 创建用户
-    user = await User.create({
+    const user = await User.create({
       username,
-      email,
+      email: lowerEmail,
       password,
     });
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('注册错误:', err);
+    
+    // 处理MongoDB唯一索引错误
+    if (err.code === 11000) {
+      // 检查是哪个字段导致了唯一性冲突
+      if (err.keyPattern && err.keyPattern.username) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '用户名已被使用，请选择其他用户名' 
+        });
+      } else if (err.keyPattern && err.keyPattern.email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '邮箱已被注册' 
+        });
+      }
+    }
+    
+    // 其他错误
+    res.status(500).json({ 
+      success: false, 
+      message: '注册失败，请稍后再试' 
+    });
   }
 };
 
@@ -32,6 +61,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const lowerEmail = email.toLowerCase();
 
     // 验证邮箱和密码
     if (!email || !password) {
@@ -39,7 +69,7 @@ exports.login = async (req, res) => {
     }
 
     // 检查用户是否存在
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: lowerEmail }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, message: '无效的凭据' });
     }
@@ -62,7 +92,10 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    res.status(200).json({ success: true, data: user });
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -73,36 +106,52 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateMe = async (req, res) => {
   try {
-    const fieldsToUpdate = {
-      username: req.body.username,
-      email: req.body.email,
-    };
+    console.log('更新用户信息请求:', req.body);
+    const { username, email, avatar } = req.body;
 
-    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+    // 构建更新对象
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (email) updateFields.email = email;
+    if (avatar) updateFields.avatar = avatar;
+
+    console.log('更新字段:', updateFields);
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
       new: true,
       runValidators: true,
     });
 
-    res.status(200).json({ success: true, data: user });
+    console.log('更新后的用户:', user);
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
   } catch (err) {
+    console.error('更新用户信息错误:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
 // @desc    更新密码
-// @route   PUT /api/users/updatepassword
+// @route   PUT /api/users/password
 // @access  Private
 exports.updatePassword = async (req, res) => {
   try {
+    const { currentPassword, newPassword } = req.body;
+
+    // 获取用户
     const user = await User.findById(req.user.id).select('+password');
 
     // 检查当前密码
-    const isMatch = await user.matchPassword(req.body.currentPassword);
+    const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: '当前密码不正确' });
     }
 
-    user.password = req.body.newPassword;
+    // 设置新密码
+    user.password = newPassword;
     await user.save();
 
     sendTokenResponse(user, 200, res);
@@ -113,22 +162,20 @@ exports.updatePassword = async (req, res) => {
 
 // 生成token并发送响应
 const sendTokenResponse = (user, statusCode, res) => {
-  // 创建token
-  const token = user.getSignedJwtToken();
-
-  const options = {
-    expires: new Date(
-      Date.now() + process.env.JWT_EXPIRE * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true,
-  };
-
-  if (process.env.NODE_ENV === 'production') {
-    options.secure = true;
+  try {
+    // 创建token
+    const token = user.getSignedJwtToken();
+    
+    // 直接返回token，不设置cookie
+    return res.status(statusCode).json({
+      success: true,
+      token
+    });
+  } catch (error) {
+    console.error('Token生成错误:', error);
+    return res.status(500).json({
+      success: false,
+      message: '生成认证令牌失败'
+    });
   }
-
-  res.status(statusCode).cookie('token', token, options).json({
-    success: true,
-    token,
-  });
 }; 

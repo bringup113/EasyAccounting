@@ -1,0 +1,200 @@
+.notification-center {
+  margin-right: 16px;
+}
+
+.notification-dropdown {
+  width: 320px;
+  max-width: 90vw;
+  overflow-x: hidden;
+}
+
+.notification-menu {
+  max-height: 450px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notification-header h3 {
+  font-size: 13px;
+  margin: 0;
+}
+
+.notification-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  max-width: calc(100% - 80px); /* 为时间留出空间 */
+}
+
+.notification-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.notification-actions .ant-btn {
+  font-size: 12px;
+}
+
+.notification-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 380px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 200px; /* 确保最小高度，避免空列表时界面变小 */
+}
+
+.notification-item {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item:hover {
+  background-color: #f5f5f5;
+}
+
+.notification-unread {
+  background-color: #e6f7ff;
+}
+
+.notification-unread:hover {
+  background-color: #d9f2ff;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #8c8c8c;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.notification-empty {
+  padding: 12px 0;
+  text-align: center;
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.notification-empty-container {
+  min-height: 200px; /* 确保最小高度，与有通知时保持一致 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.notification-loading {
+  padding: 12px 0;
+  text-align: center;
+  min-height: 200px; /* 确保最小高度，与有通知时保持一致 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 通知内容样式 */
+.notification-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.notification-content-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.notification-message {
+  color: #333;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  max-width: calc(100% - 90px); /* 为操作按钮留出空间 */
+}
+
+/* 鼠标悬停时显示完整内容 */
+.notification-title:hover,
+.notification-message:hover {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  position: relative;
+  z-index: 1;
+}
+
+/* 操作按钮样式 */
+.notification-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.notification-item-actions .ant-btn {
+  font-size: 11px;
+  padding: 0 6px;
+  height: 22px;
+  line-height: 22px;
+  min-width: 36px;
+}
+
+/* 调整Tabs样式 */
+.notification-menu .ant-tabs-nav {
+  margin-bottom: 0;
+  padding: 0 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notification-menu .ant-tabs-tab {
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.notification-menu .ant-tabs-content-holder {
+  overflow: auto;
+  width: 100%;
+}
+
+.notification-menu .ant-tabs-content {
+  overflow: visible;
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .notification-dropdown {
+    width: 280px;
+  }
+} 

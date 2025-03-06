@@ -1,27 +1,15 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/lib/locale/zh_CN';
-import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
+import { store } from './store';
 import App from './App';
-import store from './store';
-import './index.css';
+import 'antd/dist/reset.css';
 
-// 设置dayjs语言为中文
-dayjs.locale('zh-cn');
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// 使用React 18的createRoot API
+const container = document.getElementById('root');
+const root = createRoot(container);
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <ConfigProvider locale={zhCN}>
-          <App />
-        </ConfigProvider>
-      </BrowserRouter>
-    </Provider>
-  </React.StrictMode>
+  <Provider store={store}>
+    <App />
+  </Provider>
 ); 

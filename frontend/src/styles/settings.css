@@ -1,0 +1,69 @@
+.settings-container {
+  padding: 20px;
+}
+
+.settings-card {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.settings-card .ant-card-head-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.settings-card .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.settings-card .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.settings-card .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.backup-actions,
+.export-actions {
+  margin: 16px 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 10px;
+  }
+  
+  .settings-card {
+    box-shadow: none;
+  }
+  
+  .settings-card .ant-tabs-tab {
+    padding: 8px 12px;
+  }
+}
+
+/* 深色主题适配 */
+.dark-theme .settings-card {
+  background-color: #1f1f1f;
+  color: #fff;
+}
+
+.dark-theme .settings-card .ant-card-head {
+  border-bottom-color: #303030;
+}
+
+.dark-theme .settings-card .ant-tabs-tab {
+  color: #d9d9d9;
+}
+
+.dark-theme .settings-card .ant-tabs-tab-active {
+  color: #1890ff;
+} 

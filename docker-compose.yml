@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  # MongoDB服务
+  mongo:
+    image: mongo:4.4
+    container_name: finance-tracker-mongo
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27018:27017"
+    networks:
+      - app-network
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: finance-tracker-backend
+    restart: always
+    depends_on:
+      - mongo
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://mongo:27017/finance-tracker
+      - JWT_SECRET=your_jwt_secret_key_here
+      - JWT_EXPIRE=30d
+    ports:
+      - "5001:5001"
+    networks:
+      - app-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: finance-tracker-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+# 网络配置
+networks:
+  app-network:
+    driver: bridge
+
+# 数据卷配置
+volumes:
+  mongo-data:
+    driver: local 

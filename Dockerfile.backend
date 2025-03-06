@@ -1,0 +1,18 @@
+FROM node:16-alpine
+
+WORKDIR /app
+
+# 复制package.json和package-lock.json
+COPY backend/package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 复制源代码
+COPY backend/ ./
+
+# 暴露端口
+EXPOSE 5001
+
+# 启动应用
+CMD ["npm", "start"] 

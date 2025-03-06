@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 import { setAuthToken } from '../utils/auth';
+import api from '../services/api';
 
 // 加载用户
 export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWithValue }) => {
@@ -10,11 +10,11 @@ export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWith
   }
 
   try {
-    const res = await axios.get('/api/users/me');
+    const res = await api.get('/users/me');
     return res.data.data;
   } catch (err) {
     localStorage.removeItem('token');
-    return rejectWithValue(err.response.data.message);
+    return rejectWithValue(err.response?.data?.message || '加载用户信息失败');
   }
 });
 
@@ -23,11 +23,19 @@ export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('/api/users/register', userData);
+      // 确保邮箱地址转换为小写
+      const processedData = {
+        ...userData,
+        email: userData.email.toLowerCase()
+      };
+      
+      console.log('注册数据:', processedData);
+      const res = await api.post('/users/register', processedData);
       localStorage.setItem('token', res.data.token);
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      console.error('注册错误:', err);
+      return rejectWithValue(err.response?.data?.message || '注册失败，请稍后再试');
     }
   }
 );
@@ -37,11 +45,17 @@ export const login = createAsyncThunk(
   'auth/login',
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('/api/users/login', userData);
+      // 确保邮箱地址转换为小写
+      const processedData = {
+        ...userData,
+        email: userData.email.toLowerCase()
+      };
+      
+      const res = await api.post('/users/login', processedData);
       localStorage.setItem('token', res.data.token);
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '登录失败，请检查您的凭据');
     }
   }
 );
@@ -49,12 +63,46 @@ export const login = createAsyncThunk(
 // 更新用户信息
 export const updateUser = createAsyncThunk(
   'auth/updateUser',
-  async (userData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue, getState }) => {
     try {
-      const res = await axios.put('/api/users/me', userData);
+      console.log('更新用户信息:', userData);
+      
+      // 确保avatar字段正确处理
+      let updatedUserData = { ...userData };
+      if (userData.avatar) {
+        // 如果avatar是完整URL，提取路径部分
+        if (userData.avatar.includes('http://localhost:5001') || 
+            userData.avatar.includes(process.env.REACT_APP_API_URL)) {
+          const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+          updatedUserData.avatar = userData.avatar.replace(baseUrl, '');
+          console.log('处理后的avatar路径:', updatedUserData.avatar);
+        }
+      }
+      
+      const res = await api.put('/users/me', updatedUserData);
+      console.log('更新用户信息响应:', res.data);
+      
+      // 确保返回的用户对象包含正确的avatar字段
+      if (res.data.data) {
+        // 如果响应中没有avatar但请求中有，手动添加
+        if (!res.data.data.avatar && userData.avatar) {
+          console.log('响应中没有avatar字段，手动添加');
+          return {
+            ...res.data.data,
+            avatar: userData.avatar
+          };
+        }
+        
+        // 如果响应中有avatar，确保它是正确的格式
+        if (res.data.data.avatar) {
+          console.log('响应中的avatar字段:', res.data.data.avatar);
+        }
+      }
+      
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      console.error('更新用户信息失败:', err);
+      return rejectWithValue(err.response?.data?.message || '更新用户信息失败');
     }
   }
 );
@@ -64,18 +112,17 @@ export const updatePassword = createAsyncThunk(
   'auth/updatePassword',
   async (passwordData, { rejectWithValue }) => {
     try {
-      const res = await axios.put('/api/users/updatepassword', passwordData);
-      localStorage.setItem('token', res.data.token);
+      const res = await api.put('/users/updatepassword', passwordData);
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '更新密码失败');
     }
   }
 );
 
 const initialState = {
   token: localStorage.getItem('token'),
-  isAuthenticated: null,
+  isAuthenticated: false,
   loading: true,
   user: null,
   error: null,

@@ -1,0 +1,314 @@
+/* 概览页面样式 */
+.dashboard-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* 欢迎页面样式 */
+.welcome-container {
+  text-align: center;
+  padding: 50px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-title {
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.welcome-description {
+  font-size: 16px;
+  margin-bottom: 40px;
+  color: #4a4a4a;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.book-card {
+  height: 100%;
+  transition: all 0.3s;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.book-card-icon {
+  font-size: 48px;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.create-book-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s;
+  padding: 24px;
+}
+
+.create-book-card:hover {
+  border-color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
+}
+
+/* 日历容器样式 */
+.calendar-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  margin: 0 0 24px 0;
+  overflow: hidden;
+}
+
+/* 日历内容区域样式 */
+.ant-picker-calendar {
+  padding: 0 24px 24px;
+}
+
+/* 日历头部样式 */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.calendar-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.calendar-header-left .anticon {
+  color: #1890ff;
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.calendar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.year-select,
+.ant-select-sm {
+  margin-right: 8px;
+  min-width: 80px;
+}
+
+.month-item,
+.year-item {
+  padding: 4px 12px;
+}
+
+/* 隐藏日历原有的头部 */
+.ant-picker-calendar-header {
+  display: none !important;
+}
+
+/* 日历视图切换按钮样式 */
+.calendar-header .ant-radio-group {
+  margin-left: 16px;
+}
+
+.calendar-header .ant-radio-button-wrapper {
+  padding: 0 12px;
+  height: 28px;
+  line-height: 26px;
+  font-size: 13px;
+}
+
+.calendar-header .ant-radio-button-wrapper-checked {
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: #fff;
+}
+
+.calendar-header .ant-radio-button-wrapper:hover {
+  color: #1890ff;
+}
+
+.calendar-header .ant-radio-button-wrapper-checked:hover {
+  color: #fff;
+}
+
+/* 日历单元格样式 */
+.ant-picker-calendar-date {
+  margin: 2px;
+  padding: 4px 8px;
+}
+
+.calendar-day-content {
+  min-height: 40px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-day-income,
+.calendar-day-expense {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-day-income {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.calendar-day-expense {
+  background-color: rgba(245, 34, 45, 0.1);
+  color: #f5222d;
+}
+
+/* 统计卡片样式 */
+.stat-card {
+  margin: 0 0 24px 0;
+}
+
+/* 图表容器样式 */
+.chart-container {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.chart-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 500;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 账户余额卡片样式 */
+.account-balance-card {
+  margin: 0;
+}
+
+.account-list-wrapper {
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.account-item:first-child {
+  padding-top: 0;
+}
+
+.account-item:last-child {
+  border-bottom: none;
+}
+
+.account-item:hover {
+  background-color: #f9f9f9;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+}
+
+.account-icon {
+  font-size: 24px;
+  color: #1890ff;
+  margin-right: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e6f7ff;
+  border-radius: 50%;
+}
+
+.account-name {
+  font-weight: 500;
+  font-size: 16px;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.account-currency {
+  font-size: 12px;
+  color: #8c8c8c;
+  background-color: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.account-balance {
+  font-weight: 500;
+  font-size: 18px;
+  color: #262626;
+}
+
+.account-balance-secondary {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.account-footer {
+  padding: 12px 24px;
+  text-align: center;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fafafa;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .calendar-header h2 {
+    margin-bottom: 12px;
+  }
+}
+
+.calendar-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.calendar-header-right .ant-select {
+  min-width: 80px;
+} 

@@ -11,11 +11,6 @@ const TransactionSchema = new mongoose.Schema(
       type: Number,
       required: [true, '请提供金额'],
     },
-    currency: {
-      type: String,
-      required: [true, '请提供货币类型'],
-      default: 'CNY',
-    },
     type: {
       type: String,
       enum: ['income', 'expense', 'loan'],
