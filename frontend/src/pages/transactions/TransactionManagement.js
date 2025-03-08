@@ -45,16 +45,10 @@ const TransactionManagement = () => {
     const startDateParam = params.get('startDate');
     const endDateParam = params.get('endDate');
     
-    console.log('URL参数：', { dateParam, startDateParam, endDateParam });
-    
     if (startDateParam && endDateParam) {
       // 如果有开始和结束日期参数
       const newStartDate = dayjs(startDateParam).startOf('day');
       const newEndDate = dayjs(endDateParam).endOf('day');
-      console.log('设置日期范围 (startDate & endDate)：', {
-        startDate: newStartDate.format('YYYY-MM-DD HH:mm:ss'),
-        endDate: newEndDate.format('YYYY-MM-DD HH:mm:ss')
-      });
       setStartDate(newStartDate);
       setEndDate(newEndDate);
       setDateSelectionStep(2);
@@ -63,10 +57,6 @@ const TransactionManagement = () => {
       const date = dayjs(dateParam);
       const newStartDate = date.startOf('day');
       const newEndDate = date.endOf('day');
-      console.log('设置日期范围 (单个date)：', {
-        startDate: newStartDate.format('YYYY-MM-DD HH:mm:ss'),
-        endDate: newEndDate.format('YYYY-MM-DD HH:mm:ss')
-      });
       setStartDate(newStartDate);
       setEndDate(newEndDate);
       setDateSelectionStep(2);
@@ -75,10 +65,6 @@ const TransactionManagement = () => {
       const today = dayjs();
       const newStartDate = today.startOf('day');
       const newEndDate = today.endOf('day');
-      console.log('设置默认日期范围 (今天)：', {
-        startDate: newStartDate.format('YYYY-MM-DD HH:mm:ss'),
-        endDate: newEndDate.format('YYYY-MM-DD HH:mm:ss')
-      });
       setStartDate(newStartDate);
       setEndDate(newEndDate);
       setDateSelectionStep(2);
@@ -92,7 +78,6 @@ const TransactionManagement = () => {
     
     // 确保日期是dayjs对象
     const dayjsDate = dayjs.isDayjs(date) ? date : dayjs(date);
-    console.log('日历选择日期：', dayjsDate.format('YYYY-MM-DD'));
     
     // 重置数据加载标志
     setIsDataLoaded(false);
@@ -100,7 +85,6 @@ const TransactionManagement = () => {
     if (dateSelectionStep === 0 || dateSelectionStep === 2) {
       // 如果是第一次选择或已完成选择，则重新开始选择
       const newStartDate = dayjsDate.startOf('day');
-      console.log('设置开始日期：', newStartDate.format('YYYY-MM-DD HH:mm:ss'));
       setStartDate(newStartDate);
       setEndDate(null);
       setDateSelectionStep(1);
@@ -117,11 +101,6 @@ const TransactionManagement = () => {
         newStartDate = startDate;
         newEndDate = dayjsDate.endOf('day');
       }
-      
-      console.log('设置日期范围：', {
-        startDate: newStartDate.format('YYYY-MM-DD HH:mm:ss'),
-        endDate: newEndDate.format('YYYY-MM-DD HH:mm:ss')
-      });
       
       setStartDate(newStartDate);
       setEndDate(newEndDate);
@@ -142,11 +121,6 @@ const TransactionManagement = () => {
     const [start, end] = dates;
     const newStartDate = start.startOf('day');
     const newEndDate = end.endOf('day');
-    
-    console.log('日期范围选择：', {
-      startDate: newStartDate.format('YYYY-MM-DD HH:mm:ss'),
-      endDate: newEndDate.format('YYYY-MM-DD HH:mm:ss')
-    });
     
     // 重置数据加载标志
     setIsDataLoaded(false);
@@ -254,11 +228,11 @@ const TransactionManagement = () => {
         endDate: endDate.format('YYYY-MM-DD HH:mm:ss')
       }));
     } else if (!currentBook) {
-      console.log('未选择账本，不加载交易数据');
+      // 未选择账本，不加载交易数据
     } else if (!startDate || !endDate || dateSelectionStep !== 2) {
-      console.log('日期范围未完成选择，不加载交易数据');
+      // 日期范围未完成选择，不加载交易数据
     } else if (isDataLoaded) {
-      console.log('数据已加载，跳过重复加载');
+      // 数据已加载，跳过重复加载
     }
   }, [dispatch, currentBook, startDate, endDate, dateSelectionStep, isDataLoaded]);
 

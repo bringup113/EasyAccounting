@@ -6,28 +6,10 @@ export const fetchTransactions = createAsyncThunk(
   'transactions/fetchTransactions',
   async (params, { rejectWithValue }) => {
     try {
-      console.log('查询交易记录的参数:', params);
-      const res = await api.get('/transactions', { params });
-      
-      // 精简输出，只显示关键信息
-      const { success, count, data, pagination } = res.data;
-      console.log('查询到的交易记录数据:', { 
-        success, 
-        count, 
-        pagination,
-        // 只显示前3条记录的关键字段
-        sampleData: data.slice(0, 3).map(item => ({
-          _id: item._id,
-          date: item.date,
-          type: item.type,
-          amount: item.amount,
-          description: item.description
-        }))
-      });
-      
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || '获取交易记录失败');
+      const response = await api.get('/transactions', { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || '获取交易记录失败');
     }
   }
 );

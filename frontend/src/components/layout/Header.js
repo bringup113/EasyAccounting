@@ -38,14 +38,9 @@ const Header = () => {
   // 判断当前是否在首页
   const isHomePage = location.pathname === '/home';
 
-  // 调试信息
+  // 用户头像处理
   useEffect(() => {
-    console.log('Header组件中的用户信息:', user);
-    if (user?.avatar) {
-      console.log('Header组件中的头像URL:', user.avatar);
-      const fullUrl = user.avatar.startsWith('http') ? user.avatar : `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${user.avatar}`;
-      console.log('Header组件中的完整头像URL:', fullUrl);
-    }
+    // 确保用户信息已加载
   }, [user]);
 
   // 加载用户信息和账本

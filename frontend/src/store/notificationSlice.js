@@ -56,7 +56,6 @@ export const fetchNotifications = createAsyncThunk(
     );
     
     if (outdatedNotifications.length > 0) {
-      console.log(`自动删除 ${outdatedNotifications.length} 条已读且超过7天的通知`);
       // 删除过期的已读通知
       outdatedNotifications.forEach(notification => {
         dispatch(deleteNotification(notification._id));
@@ -117,6 +116,21 @@ const notificationSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    // 清理过期通知（已读且超过7天的通知）
+    cleanupNotifications: (state) => {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      // 找出已读且超过7天的通知
+      const outdatedNotifications = state.notifications.filter(
+        notification => notification.isRead && new Date(notification.createdAt) < sevenDaysAgo
+      );
+      
+      // 从状态中移除这些通知
+      state.notifications = state.notifications.filter(
+        notification => !(notification.isRead && new Date(notification.createdAt) < sevenDaysAgo)
+      );
     }
   },
   extraReducers: (builder) => {

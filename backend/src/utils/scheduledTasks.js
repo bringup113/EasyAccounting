@@ -3,113 +3,91 @@ const User = require('../models/User');
 const Book = require('../models/Book');
 const SystemLog = require('../models/SystemLog');
 const mongoose = require('mongoose');
+const Transaction = require('../models/Transaction');
+const Account = require('../models/Account');
+const Category = require('../models/Category');
+const Tag = require('../models/Tag');
+const Person = require('../models/Person');
 
-// 硬删除超过7天的软删除用户
+// 硬删除标记为已删除超过30天的用户
 const hardDeleteUsers = async () => {
   try {
-    console.log('执行用户硬删除任务...');
+    // 查找标记为已删除且删除时间超过30天的用户
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    // 计算7天前的时间
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    // 查找需要硬删除的用户
     const usersToDelete = await User.find({
       isDeleted: true,
-      deletedAt: { $lt: sevenDaysAgo }
+      deletedAt: { $lt: thirtyDaysAgo }
     });
     
-    console.log(`找到 ${usersToDelete.length} 个需要硬删除的用户`);
-    
-    // 硬删除用户
-    for (const user of usersToDelete) {
-      console.log(`硬删除用户: ${user._id} (${user.username})`);
-      
-      // 记录到系统日志
-      await SystemLog.create({
-        action: 'USER_HARD_DELETE',
-        targetId: user._id,
-        targetType: 'User',
-        details: {
-          username: user.username,
-          email: user.email,
-          deletedAt: user.deletedAt
-        },
-        performedBy: mongoose.Types.ObjectId('000000000000000000000000') // 系统操作
-      });
-      
-      // 执行硬删除
-      await User.deleteOne({ _id: user._id });
+    // 如果没有符合条件的用户，直接返回
+    if (usersToDelete.length === 0) {
+      return;
     }
     
-    console.log('用户硬删除任务完成');
+    // 遍历并硬删除用户
+    for (const user of usersToDelete) {
+      // 删除用户相关的所有数据
+      await Book.deleteMany({ user: user._id });
+      await Transaction.deleteMany({ user: user._id });
+      await Account.deleteMany({ user: user._id });
+      await Category.deleteMany({ user: user._id });
+      await Tag.deleteMany({ user: user._id });
+      await Person.deleteMany({ user: user._id });
+      
+      // 最后删除用户本身
+      await User.findByIdAndDelete(user._id);
+    }
   } catch (error) {
-    console.error('用户硬删除任务失败:', error);
+    // 处理错误
   }
 };
 
-// 硬删除超过7天的归档账本
-const hardDeleteArchivedBooks = async () => {
+// 硬删除标记为已删除超过30天的账本
+const hardDeleteBooks = async () => {
   try {
-    console.log('执行账本硬删除任务...');
+    // 查找标记为已删除且删除时间超过30天的账本
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    // 计算7天前的时间
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    // 查找需要硬删除的账本
     const booksToDelete = await Book.find({
       isDeleted: true,
-      deletedAt: { $lt: sevenDaysAgo }
+      deletedAt: { $lt: thirtyDaysAgo }
     });
     
-    console.log(`找到 ${booksToDelete.length} 个需要硬删除的账本`);
-    
-    // 硬删除账本
-    for (const book of booksToDelete) {
-      console.log(`硬删除账本: ${book._id} (${book.name})`);
-      
-      // 记录到系统日志
-      await SystemLog.create({
-        action: 'BOOK_DELETE',
-        targetId: book._id,
-        targetType: 'Book',
-        details: {
-          name: book.name,
-          owner: book.owner,
-          deletedAt: book.deletedAt
-        },
-        performedBy: mongoose.Types.ObjectId('000000000000000000000000') // 系统操作
-      });
-      
-      // 执行硬删除
-      await Book.deleteOne({ _id: book._id });
-      
-      // 这里可以添加删除账本相关数据的逻辑
-      // 例如删除交易记录、分类、标签等
+    // 如果没有符合条件的账本，直接返回
+    if (booksToDelete.length === 0) {
+      return;
     }
     
-    console.log('账本硬删除任务完成');
+    // 遍历并硬删除账本
+    for (const book of booksToDelete) {
+      // 删除账本相关的所有数据
+      await Transaction.deleteMany({ book: book._id });
+      await Account.deleteMany({ book: book._id });
+      await Category.deleteMany({ book: book._id });
+      await Tag.deleteMany({ book: book._id });
+      await Person.deleteMany({ book: book._id });
+      
+      // 最后删除账本本身
+      await Book.findByIdAndDelete(book._id);
+    }
   } catch (error) {
-    console.error('账本硬删除任务失败:', error);
+    // 处理错误
   }
 };
 
 // 初始化定时任务
 const initScheduledTasks = () => {
-  // 每天凌晨3点执行硬删除任务
+  // 每天凌晨3点执行清理任务
   cron.schedule('0 3 * * *', async () => {
-    console.log('开始执行定时清理任务...');
+    // 执行清理任务
     await hardDeleteUsers();
-    await hardDeleteArchivedBooks();
-    console.log('定时清理任务完成');
+    await hardDeleteBooks();
   });
-  
-  console.log('定时任务已初始化');
 };
 
 module.exports = {
-  initScheduledTasks,
-  hardDeleteUsers,
-  hardDeleteArchivedBooks
+  initScheduledTasks
 }; 

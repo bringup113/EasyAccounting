@@ -68,13 +68,10 @@ const AccountSettings = ({ onCancel }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  // 调试信息
+  // 设置头像URL
   useEffect(() => {
-    console.log('ProfileModal - 当前用户信息:', user);
     if (user?.avatar) {
-      console.log('ProfileModal - 头像URL:', user.avatar);
       const fullUrl = user.avatar.startsWith('http') ? user.avatar : `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${user.avatar}`.replace('/api/uploads', '/uploads');
-      console.log('ProfileModal - 完整头像URL:', fullUrl);
       setImageUrl(fullUrl);
     }
   }, [user]);
@@ -209,8 +206,6 @@ const AccountSettings = ({ onCancel }) => {
                         const avatarUrl = info.file.response.url;
                         // 修复URL路径，确保不包含多余的/api前缀
                         const fixedAvatarUrl = avatarUrl.replace('/api/uploads', '/uploads');
-                        console.log('上传成功，返回数据:', info.file.response);
-                        console.log('修复后的头像URL:', fixedAvatarUrl);
                         // 更新表单值和预览图
                         setImageUrl(fixedAvatarUrl);
                         profileForm.setFieldsValue({ avatar: fixedAvatarUrl });

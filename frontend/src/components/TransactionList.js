@@ -37,23 +37,7 @@ const TransactionList = ({
 
   // 输出收到的交易数据
   useEffect(() => {
-    if (transactions && transactions.length > 0) {
-      console.log('交易记录卡片数据:', {
-        总数量: transactions.length,
-        分页信息: pagination,
-        总记录数: total,
-        // 只显示前3条记录的关键字段
-        示例数据: transactions.slice(0, 3).map(item => ({
-          _id: item._id,
-          日期: dayjs(item.date).format('YYYY-MM-DD HH:mm:ss'),
-          类型: item.type,
-          金额: item.amount,
-          描述: item.description
-        }))
-      });
-    } else {
-      console.log('交易记录卡片数据: 无数据');
-    }
+    // 数据已加载，无需额外处理
   }, [transactions, pagination, total]);
 
   // 筛选条件
@@ -119,7 +103,6 @@ const TransactionList = ({
   // 应用筛选条件
   const applyFilters = () => {
     // 手动触发的筛选操作，由用户点击"应用"按钮触发
-    console.log('手动应用筛选条件:', filters);
     dispatch(fetchTransactions(filters));
   };
 

@@ -538,8 +538,6 @@ const Settings = () => {
                                   const avatarUrl = info.file.response.url;
                                   // 修复URL路径，移除多余的/api前缀
                                   const fullAvatarUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${avatarUrl}`.replace('/api/uploads', '/uploads');
-                                  console.log('上传成功，返回数据:', info.file.response);
-                                  console.log('完整头像URL:', fullAvatarUrl);
                                   // 更新表单值和预览图
                                   setImageUrl(fullAvatarUrl);
                                   profileForm.setFieldsValue({ avatar: fullAvatarUrl });

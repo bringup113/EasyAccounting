@@ -43,13 +43,6 @@ const Dashboard = () => {
       const startDate = currentDate.startOf('month').format('YYYY-MM-DD');
       const endDate = currentDate.endOf('month').format('YYYY-MM-DD');
       
-      console.log('加载交易数据:', {
-        currentBook: currentBook.name,
-        selectedDate: currentDate.format('YYYY-MM-DD'),
-        startDate,
-        endDate
-      });
-      
       // 只在Dashboard页面加载交易数据，避免与TransactionManagement页面冲突
       if (location.pathname === '/dashboard') {
         dispatch(fetchTransactions({ 
@@ -61,7 +54,7 @@ const Dashboard = () => {
       
       dispatch(fetchAccounts(currentBook._id));
     } else {
-      console.log('未选择账本，不加载数据');
+      // 未选择账本，不加载数据
     }
   }, [dispatch, currentBook, selectedDate, location.pathname]);
 
@@ -192,7 +185,6 @@ const Dashboard = () => {
       
       // 无论是否有交易记录，都跳转到交易记录页面
       const dateStr = date.format('YYYY-MM-DD');
-      console.log('从Dashboard跳转到交易记录页面，日期：', dateStr);
       
       // 使用单个日期参数跳转，确保交易记录页面只显示该日的交易
       navigate(`/transactions?date=${dateStr}`);
@@ -206,7 +198,6 @@ const Dashboard = () => {
 
   // 处理面板变化（月份/年份切换）
   const onPanelChange = (date, mode) => {
-    console.log('Panel changed:', date.format('YYYY-MM-DD'), mode);
     const newDate = dayjs(date).startOf('month');
     setSelectedDate(newDate);
     setCalendarMode(mode);
@@ -235,19 +226,13 @@ const Dashboard = () => {
       // 创建新的日期对象
       const nextDate = dayjs().year(nextYear).month(nextMonth).date(1);
       
-      console.log('前进到下个月:', {
-        当前年月: `${currentYear}-${currentMonth + 1}`,
-        下个年月: `${nextYear}-${nextMonth + 1}`,
-        新日期: nextDate.format('YYYY-MM-DD')
-      });
-      
       // 更新状态
       setSelectedDate(nextDate);
       
       // 更新URL
       navigate(`/dashboard?date=${nextDate.format('YYYY-MM')}`);
     } catch (error) {
-      console.error('前进月份出错:', error);
+      // 前进月份出错
     }
   };
 
@@ -271,19 +256,13 @@ const Dashboard = () => {
       // 创建新的日期对象
       const prevDate = dayjs().year(prevYear).month(prevMonth).date(1);
       
-      console.log('后退到上个月:', {
-        当前年月: `${currentYear}-${currentMonth + 1}`,
-        上个年月: `${prevYear}-${prevMonth + 1}`,
-        新日期: prevDate.format('YYYY-MM-DD')
-      });
-      
       // 更新状态
       setSelectedDate(prevDate);
       
       // 更新URL
       navigate(`/dashboard?date=${prevDate.format('YYYY-MM')}`);
     } catch (error) {
-      console.error('后退月份出错:', error);
+      // 后退月份出错
     }
   };
 
@@ -304,18 +283,13 @@ const Dashboard = () => {
         // 创建新的日期对象，设置为月份第一天
         const newDate = dayjs().year(year).month(month).date(1);
         
-        console.log('选择月份:', {
-          选择的年月: `${year}-${month + 1}`,
-          新日期: newDate.format('YYYY-MM-DD')
-        });
-        
         // 更新状态
         setSelectedDate(newDate);
         
         // 更新URL
         navigate(`/dashboard?date=${newDate.format('YYYY-MM')}`);
       } catch (error) {
-        console.error('处理月份选择出错:', error);
+        // 处理月份选择出错
       }
     }
   };

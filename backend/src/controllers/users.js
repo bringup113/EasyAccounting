@@ -29,8 +29,6 @@ exports.register = async (req, res) => {
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    console.error('注册错误:', err);
-    
     // 处理MongoDB唯一索引错误
     if (err.code === 11000) {
       // 检查是哪个字段导致了唯一性冲突
@@ -104,33 +102,40 @@ exports.getMe = async (req, res) => {
 // @desc    更新用户信息
 // @route   PUT /api/users/me
 // @access  Private
-exports.updateMe = async (req, res) => {
+exports.updateUserProfile = async (req, res) => {
   try {
-    console.log('更新用户信息请求:', req.body);
-    const { username, email, avatar } = req.body;
-
+    // 获取用户ID
+    const userId = req.user._id;
+    
+    // 获取要更新的字段
+    const { name, email, avatar, language, theme, currency } = req.body;
+    
     // 构建更新对象
     const updateFields = {};
-    if (username) updateFields.username = username;
-    if (email) updateFields.email = email;
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email.toLowerCase();
     if (avatar) updateFields.avatar = avatar;
-
-    console.log('更新字段:', updateFields);
-
-    const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
-      new: true,
-      runValidators: true,
-    });
-
-    console.log('更新后的用户:', user);
-
+    if (language) updateFields.settings = { ...req.user.settings, language };
+    if (theme) updateFields.settings = { ...req.user.settings, theme };
+    if (currency) updateFields.settings = { ...req.user.settings, currency };
+    
+    // 更新用户
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
     res.status(200).json({
       success: true,
-      data: user,
+      data: user
     });
-  } catch (err) {
-    console.error('更新用户信息错误:', err);
-    res.status(500).json({ success: false, message: err.message });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '更新用户信息失败',
+      error: error.message
+    });
   }
 };
 
@@ -172,7 +177,6 @@ const sendTokenResponse = (user, statusCode, res) => {
       token
     });
   } catch (error) {
-    console.error('Token生成错误:', error);
     return res.status(500).json({
       success: false,
       message: '生成认证令牌失败'

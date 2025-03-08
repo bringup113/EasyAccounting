@@ -71,16 +71,33 @@ const initSystemAdmin = async () => {
     const adminExists = await Admin.findOne({ username: 'admin' });
     
     if (!adminExists) {
-      console.log('创建系统管理员账户...');
       await Admin.create({
         username: 'admin',
         password: 'admin123',  // 修改为符合最小长度要求的密码
         isSystemAdmin: true
       });
-      console.log('系统管理员账户创建成功');
     }
   } catch (error) {
     console.error('初始化系统管理员失败:', error);
+  }
+};
+
+// 创建默认管理员账户
+Admin.createDefaultAdmin = async function() {
+  try {
+    // 检查是否已存在管理员账户
+    const adminCount = await this.countDocuments();
+    if (adminCount === 0) {
+      // 创建系统管理员账户
+      await this.create({
+        username: 'admin',
+        password: 'admin123',
+        email: 'admin@example.com',
+        role: 'superadmin'
+      });
+    }
+  } catch (error) {
+    // 创建管理员账户失败
   }
 };
 

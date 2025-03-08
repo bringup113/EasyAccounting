@@ -162,17 +162,20 @@ const bookSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // 获取账本列表
       .addCase(fetchBooks.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchBooks.fulfilled, (state, action) => {
         state.loading = false;
-        state.books = action.payload;
+        state.books = action.payload.data;
+        state.error = null;
         
         // 如果有存储的当前账本ID，则设置当前账本
         const currentBookId = localStorage.getItem('currentBookId');
         if (currentBookId && !state.currentBook) {
-          const book = action.payload.find((b) => b._id === currentBookId);
+          const book = action.payload.data.find((b) => b._id === currentBookId);
           if (book) {
             state.currentBook = book;
           }
@@ -180,34 +183,39 @@ const bookSlice = createSlice({
       })
       .addCase(fetchBooks.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || '获取账本列表失败';
       })
+      
+      // 获取单个账本
       .addCase(fetchBook.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchBook.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentBook = action.payload;
-        console.log('fetchBook.fulfilled - 获取到的账本数据:', action.payload);
+        state.currentBook = action.payload.book;
+        state.error = null;
       })
       .addCase(fetchBook.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-        console.error('fetchBook.rejected - 获取账本数据失败:', action.payload);
+        state.error = action.payload || '获取账本详情失败';
       })
+      
+      // 创建账本
       .addCase(createBook.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(createBook.fulfilled, (state, action) => {
         state.loading = false;
-        state.books.push(action.payload);
-        state.currentBook = action.payload;
-        localStorage.setItem('currentBookId', action.payload._id);
-        console.log('createBook.fulfilled - 创建的账本数据:', action.payload);
+        state.books = [...state.books, action.payload.book];
+        state.error = null;
+        state.currentBook = action.payload.book;
+        localStorage.setItem('currentBookId', action.payload.book._id);
       })
       .addCase(createBook.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || '创建账本失败';
       })
       .addCase(updateBook.pending, (state) => {
         state.loading = true;

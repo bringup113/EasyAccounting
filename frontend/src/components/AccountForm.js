@@ -25,10 +25,8 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
       if (user && user._id) {
         const userSpecificKey = `availableCurrencies_${user._id}`;
         const savedCurrencies = localStorage.getItem(userSpecificKey);
-        console.log('从localStorage获取的货币设置:', savedCurrencies);
         if (savedCurrencies) {
           const parsedCurrencies = JSON.parse(savedCurrencies);
-          console.log('解析后的货币设置:', parsedCurrencies);
           setAvailableCurrencies(parsedCurrencies);
         } else {
           // 检查是否有全局设置可以迁移
@@ -40,7 +38,6 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
                 // 迁移全局设置到用户特定设置
                 setAvailableCurrencies(parsedGlobalCurrencies);
                 localStorage.setItem(userSpecificKey, globalCurrencies);
-                console.log('已将全局货币设置迁移到用户特定设置');
               } else {
                 // 如果全局设置为空，使用默认设置
                 const defaultCurrencies = [
@@ -114,29 +111,8 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
   }, [currentBook, availableCurrencies]);
 
   useEffect(() => {
-    // 调试输出
-    console.log('当前账本:', currentBook);
-    console.log('可用货币:', currencies);
-    console.log('设置中的可用货币:', availableCurrencies);
-    
-    // 添加更详细的调试信息
-    console.log('当前账本完整信息:', JSON.stringify(currentBook, null, 2));
-    console.log('货币列表详细信息:', JSON.stringify(currencies, null, 2));
-    
-    if (account) {
-      form.setFieldsValue({
-        name: account.name,
-        initialBalance: account.initialBalance || 0,
-        currency: account.currency,
-      });
-      setInitialCurrency(account.currency);
-    } else {
-      form.setFieldsValue({
-        initialBalance: 0,
-        currency: currentBook?.defaultCurrency || 'CNY',
-      });
-    }
-  }, [account, form, currentBook, currencies, availableCurrencies]);
+    // 确保货币列表已加载
+  }, [currentBook, currencies, availableCurrencies]);
 
   useEffect(() => {
     if (error) {
@@ -227,6 +203,23 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
         });
     }
   };
+
+  useEffect(() => {
+    // 初始化表单数据
+    if (account) {
+      form.setFieldsValue({
+        name: account.name,
+        initialBalance: account.initialBalance || 0,
+        currency: account.currency,
+      });
+      setInitialCurrency(account.currency);
+    } else {
+      form.setFieldsValue({
+        initialBalance: 0,
+        currency: currentBook?.defaultCurrency || 'CNY',
+      });
+    }
+  }, [account, form, currentBook, currencies, availableCurrencies]);
 
   return (
     <Form

@@ -34,7 +34,6 @@ export const register = createAsyncThunk(
         email: userData.email.toLowerCase()
       };
       
-      console.log('注册数据:', processedData);
       const res = await api.post('/users/register', processedData);
       localStorage.setItem('token', res.data.token);
       
@@ -82,8 +81,6 @@ export const updateUser = createAsyncThunk(
   'auth/updateUser',
   async (userData, { rejectWithValue, getState }) => {
     try {
-      console.log('更新用户信息:', userData);
-      
       // 确保avatar字段正确处理
       let updatedUserData = { ...userData };
       if (userData.avatar) {
@@ -92,27 +89,19 @@ export const updateUser = createAsyncThunk(
             userData.avatar.includes(process.env.REACT_APP_API_URL)) {
           const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
           updatedUserData.avatar = userData.avatar.replace(baseUrl, '');
-          console.log('处理后的avatar路径:', updatedUserData.avatar);
         }
       }
       
       const res = await api.put('/users/me', updatedUserData);
-      console.log('更新用户信息响应:', res.data);
       
       // 确保返回的用户对象包含正确的avatar字段
       if (res.data.data) {
         // 如果响应中没有avatar但请求中有，手动添加
         if (!res.data.data.avatar && userData.avatar) {
-          console.log('响应中没有avatar字段，手动添加');
           return {
             ...res.data.data,
             avatar: userData.avatar
           };
-        }
-        
-        // 如果响应中有avatar，确保它是正确的格式
-        if (res.data.data.avatar) {
-          console.log('响应中的avatar字段:', res.data.data.avatar);
         }
       }
       
