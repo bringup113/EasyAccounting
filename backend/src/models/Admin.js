@@ -64,40 +64,32 @@ AdminSchema.methods.matchPassword = async function(enteredPassword) {
 // 创建管理员模型
 const Admin = mongoose.model('Admin', AdminSchema);
 
-// 初始化系统管理员
+/**
+ * 初始化系统管理员账户
+ * 如果系统中没有管理员账户，则创建一个默认的管理员账户
+ */
 const initSystemAdmin = async () => {
   try {
     // 检查是否已存在系统管理员
-    const adminExists = await Admin.findOne({ username: 'admin' });
+    const adminCount = await Admin.countDocuments();
     
-    if (!adminExists) {
+    if (adminCount === 0) {
+      // 使用环境变量中的默认密码，如果不存在则使用安全的默认密码
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Admin@123456';
+      
       await Admin.create({
         username: 'admin',
-        password: 'admin123',  // 修改为符合最小长度要求的密码
+        password: defaultPassword,
         isSystemAdmin: true
       });
+      
+      // 记录创建成功信息到日志（可以使用专门的日志系统替代）
+      console.info('系统管理员账户创建成功');
     }
   } catch (error) {
-    console.error('初始化系统管理员失败:', error);
-  }
-};
-
-// 创建默认管理员账户
-Admin.createDefaultAdmin = async function() {
-  try {
-    // 检查是否已存在管理员账户
-    const adminCount = await this.countDocuments();
-    if (adminCount === 0) {
-      // 创建系统管理员账户
-      await this.create({
-        username: 'admin',
-        password: 'admin123',
-        email: 'admin@example.com',
-        role: 'superadmin'
-      });
-    }
-  } catch (error) {
-    // 创建管理员账户失败
+    // 使用更详细的错误处理
+    console.error('初始化系统管理员失败:', error.message);
+    // 在生产环境中，这里应该通知管理员或记录到错误监控系统
   }
 };
 

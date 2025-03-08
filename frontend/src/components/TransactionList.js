@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   List, Card, Typography, Space, Tag, Button, 
@@ -15,6 +15,7 @@ import { TransactionListSkeleton } from './SkeletonLoaders';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { debounce } from 'lodash';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -35,11 +36,6 @@ const TransactionList = ({
   
   const intl = useIntl();
 
-  // 输出收到的交易数据
-  useEffect(() => {
-    // 数据已加载，无需额外处理
-  }, [transactions, pagination, total]);
-
   // 筛选条件
   const [filters, setFilters] = useState({
     bookId: currentBook?._id,
@@ -54,57 +50,72 @@ const TransactionList = ({
     search: '',
   });
 
-  // 是否显示筛选面板
-  const [showFilters, setShowFilters] = useState(false);
+  // 使用useMemo缓存分类和标签数据，避免重复计算
+  const categoriesMap = useMemo(() => {
+    const map = {};
+    categories.forEach(category => {
+      map[category._id] = category;
+    });
+    return map;
+  }, [categories]);
 
-  useEffect(() => {
-    if (currentBook) {
-      setFilters(prev => ({
-        ...prev,
-        bookId: currentBook._id
-      }));
-    }
-  }, [currentBook]);
+  const tagsMap = useMemo(() => {
+    const map = {};
+    tags.forEach(tag => {
+      map[tag._id] = tag;
+    });
+    return map;
+  }, [tags]);
+
+  const accountsMap = useMemo(() => {
+    const map = {};
+    accounts.forEach(account => {
+      map[account._id] = account;
+    });
+    return map;
+  }, [accounts]);
+
+  const personsMap = useMemo(() => {
+    const map = {};
+    persons.forEach(person => {
+      map[person._id] = person;
+    });
+    return map;
+  }, [persons]);
+
+  // 使用useCallback和debounce优化搜索函数，减少API请求
+  const debouncedSearch = useCallback(
+    debounce((newFilters) => {
+      dispatch(fetchTransactions(newFilters));
+    }, 500),
+    [dispatch]
+  );
 
   // 处理筛选条件变化
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-      page: 1 // 重置页码
-    }));
-  };
+  const handleFilterChange = useCallback((key, value) => {
+    const newFilters = { ...filters, [key]: value, page: 1 };
+    setFilters(newFilters);
+    debouncedSearch(newFilters);
+  }, [filters, debouncedSearch]);
 
   // 处理分页变化
-  const handlePageChange = (page, pageSize) => {
-    setFilters(prev => ({
-      ...prev,
-      page,
-      limit: pageSize
-    }));
-  };
+  const handlePageChange = useCallback((page, pageSize) => {
+    const newFilters = { ...filters, page, limit: pageSize };
+    setFilters(newFilters);
+    dispatch(fetchTransactions(newFilters));
+  }, [filters, dispatch]);
 
-  // 重置筛选条件
-  const resetFilters = () => {
-    setFilters({
-      bookId: currentBook?._id,
-      page: 1,
-      limit: 10,
-      type: undefined,
-      categoryId: undefined,
-      personId: undefined,
-      tagId: undefined,
-      accountId: undefined,
-      dateRange: undefined,
-      search: '',
-    });
-  };
+  // 初始加载数据
+  useEffect(() => {
+    if (currentBook?._id) {
+      const initialFilters = { ...filters, bookId: currentBook._id };
+      setFilters(initialFilters);
+      dispatch(fetchTransactions(initialFilters));
+    }
+  }, [currentBook?._id]);
 
-  // 应用筛选条件
-  const applyFilters = () => {
-    // 手动触发的筛选操作，由用户点击"应用"按钮触发
-    dispatch(fetchTransactions(filters));
-  };
+  // 是否显示筛选面板
+  const [showFilters, setShowFilters] = useState(false);
 
   // 获取账户的货币信息
   const getAccountCurrency = (accountId) => {
@@ -292,14 +303,17 @@ const TransactionList = ({
           </Row>
           <div style={{ marginTop: 16, textAlign: 'right' }}>
             <Button 
-              onClick={resetFilters}
+              onClick={() => setShowFilters(false)}
               style={{ marginRight: 8 }}
             >
               <FormattedMessage id="common.reset" defaultMessage="重置" />
             </Button>
             <Button 
               type="primary" 
-              onClick={applyFilters}
+              onClick={() => {
+                dispatch(fetchTransactions(filters));
+                setShowFilters(false);
+              }}
             >
               <FormattedMessage id="common.apply" defaultMessage="应用" />
             </Button>
@@ -473,4 +487,5 @@ const TransactionList = ({
   );
 };
 
-export default TransactionList; 
+// 使用React.memo优化组件，避免不必要的重新渲染
+export default React.memo(TransactionList); 

@@ -1,6 +1,68 @@
 const Account = require('../models/Account');
 const Book = require('../models/Book');
 const Transaction = require('../models/Transaction');
+const mongoose = require('mongoose');
+
+/**
+ * 计算账户余额和相关统计信息
+ * @param {Object} account - 账户对象
+ * @param {Object} book - 账本对象
+ * @returns {Object} 包含余额和统计信息的账户对象
+ */
+const calculateAccountBalance = async (account, book) => {
+  try {
+    // 使用聚合查询一次性获取所有交易数据并计算总额
+    const transactionStats = await Transaction.aggregate([
+      {
+        $match: {
+          accountId: mongoose.Types.ObjectId(account._id),
+          isDeleted: { $ne: true }
+        }
+      },
+      {
+        $group: {
+          _id: '$type',
+          total: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // 初始化统计数据
+    let totalIncome = 0;
+    let totalExpense = 0;
+    
+    // 处理聚合结果
+    transactionStats.forEach(stat => {
+      if (stat._id === 'income') {
+        totalIncome = stat.total;
+      } else if (stat._id === 'expense') {
+        totalExpense = stat.total;
+      }
+    });
+
+    // 计算当前余额
+    const currentBalance = account.initialBalance + totalIncome - totalExpense;
+
+    // 获取货币信息
+    const currency = book.currencies.find(c => c.code === account.currency);
+
+    // 检查是否有交易记录
+    const hasTransactions = totalIncome > 0 || totalExpense > 0;
+
+    // 返回增强的账户对象
+    return {
+      ...account.toObject(),
+      currentBalance,
+      totalIncome,
+      totalExpense,
+      currencyInfo: currency,
+      hasTransactions
+    };
+  } catch (error) {
+    throw new Error(`计算账户余额失败: ${error.message}`);
+  }
+};
 
 // @desc    创建新账户
 // @route   POST /api/accounts
@@ -61,7 +123,8 @@ exports.createAccount = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: '创建账户失败',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 };
@@ -103,53 +166,9 @@ exports.getAccounts = async (req, res) => {
     // 获取账户
     const accounts = await Account.find({ bookId }).sort('name');
 
-    // 计算每个账户的当前余额
+    // 计算每个账户的当前余额和统计信息
     const accountsWithBalance = await Promise.all(
-      accounts.map(async (account) => {
-        // 获取所有收入交易
-        const incomeTransactions = await Transaction.find({
-          accountId: account._id,
-          type: 'income',
-          isDeleted: { $ne: true },
-        });
-
-        // 获取所有支出交易
-        const expenseTransactions = await Transaction.find({
-          accountId: account._id,
-          type: 'expense',
-          isDeleted: { $ne: true },
-        });
-
-        // 计算总收入
-        const totalIncome = incomeTransactions.reduce(
-          (sum, transaction) => sum + transaction.amount,
-          0
-        );
-
-        // 计算总支出
-        const totalExpense = expenseTransactions.reduce(
-          (sum, transaction) => sum + transaction.amount,
-          0
-        );
-
-        // 计算当前余额
-        const currentBalance = account.initialBalance + totalIncome - totalExpense;
-
-        // 获取货币信息
-        const currency = book.currencies.find(c => c.code === account.currency);
-
-        // 检查是否有交易记录
-        const hasTransactions = incomeTransactions.length > 0 || expenseTransactions.length > 0;
-
-        return {
-          ...account.toObject(),
-          currentBalance,
-          totalIncome,
-          totalExpense,
-          currencyInfo: currency,
-          hasTransactions
-        };
-      })
+      accounts.map(account => calculateAccountBalance(account, book))
     );
 
     res.status(200).json({
@@ -160,7 +179,8 @@ exports.getAccounts = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: '获取账户列表失败',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 };
@@ -191,56 +211,18 @@ exports.getAccount = async (req, res) => {
       });
     }
 
-    // 获取所有收入交易
-    const incomeTransactions = await Transaction.find({
-      accountId: account._id,
-      type: 'income',
-      isDeleted: { $ne: true },
-    });
-
-    // 获取所有支出交易
-    const expenseTransactions = await Transaction.find({
-      accountId: account._id,
-      type: 'expense',
-      isDeleted: { $ne: true },
-    });
-
-    // 计算总收入
-    const totalIncome = incomeTransactions.reduce(
-      (sum, transaction) => sum + transaction.amount,
-      0
-    );
-
-    // 计算总支出
-    const totalExpense = expenseTransactions.reduce(
-      (sum, transaction) => sum + transaction.amount,
-      0
-    );
-
-    // 计算当前余额
-    const currentBalance = account.initialBalance + totalIncome - totalExpense;
-
-    // 获取货币信息
-    const currency = book.currencies.find(c => c.code === account.currency);
-
-    // 检查是否有交易记录
-    const hasTransactions = incomeTransactions.length > 0 || expenseTransactions.length > 0;
+    // 计算账户余额和统计信息
+    const accountWithBalance = await calculateAccountBalance(account, book);
 
     res.status(200).json({
       success: true,
-      data: {
-        ...account.toObject(),
-        currentBalance,
-        totalIncome,
-        totalExpense,
-        currencyInfo: currency,
-        hasTransactions
-      },
+      data: accountWithBalance,
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: '获取账户详情失败',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 };
@@ -296,11 +278,23 @@ exports.updateAccount = async (req, res) => {
       }
     }
 
+    // 提取允许更新的字段
+    const { name, initialBalance, currency } = req.body;
+    const updateData = {};
+    
+    if (name !== undefined) updateData.name = name;
+    if (initialBalance !== undefined) updateData.initialBalance = initialBalance;
+    if (currency !== undefined) updateData.currency = currency;
+
     // 更新账户
-    account = await Account.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    account = await Account.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
@@ -309,7 +303,8 @@ exports.updateAccount = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: '更新账户失败',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 };
@@ -355,6 +350,7 @@ exports.deleteAccount = async (req, res) => {
 
     // 软删除账户
     account.isDeleted = true;
+    account.deletedAt = new Date();
     await account.save();
 
     res.status(200).json({
@@ -364,7 +360,8 @@ exports.deleteAccount = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: '删除账户失败',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 }; 
