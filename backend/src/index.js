@@ -95,7 +95,7 @@ app.use('/api/accounts', require('./routes/accounts'));
 app.use('/api/admin-users', require('./routes/adminUsers'));
 app.use('/api/admin-books', require('./routes/adminBooks'));
 app.use('/api/admins', require('./routes/admins'));
-// TODO: 预算功能尚未实现
+// 预算功能尚未实现，计划在后续版本中添加
 // app.use('/api/budgets', require('./routes/budgets'));
 
 // 文件上传路由
@@ -124,7 +124,7 @@ app.post('/api/upload', protect, upload.single('avatar'), (req, res) => {
 
 // 将预算路由挂载到账本路由下
 const bookRouter = require('./routes/books');
-// TODO: 预算功能尚未实现
+// 预算功能尚未实现，计划在后续版本中添加
 // bookRouter.use('/:bookId/budgets', require('./routes/budgets'));
 
 // 根路由

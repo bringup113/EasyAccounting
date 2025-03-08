@@ -17,13 +17,10 @@ import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
 import BookManagement from './pages/BookManagement';
 import SystemMonitor from './pages/SystemMonitor';
-import BackupManagement from './pages/BackupManagement';
 import SystemSettings from './pages/SystemSettings';
 import NotificationSettings from './pages/NotificationSettings';
 import SecuritySettings from './pages/SecuritySettings';
-import LogManagement from './pages/LogManagement';
 import AdminLogin from './pages/AdminLogin';
-import TestApi from './pages/TestApi';
 
 // 样式
 import './AdminApp.css';
@@ -130,12 +127,9 @@ const AdminLayout = () => {
               <Route path="/users" element={<UserManagement />} />
               <Route path="/books" element={<BookManagement />} />
               <Route path="/monitor" element={<SystemMonitor />} />
-              <Route path="/backups" element={<BackupManagement />} />
               <Route path="/settings" element={<SystemSettings />} />
               <Route path="/notifications" element={<NotificationSettings />} />
               <Route path="/security" element={<SecuritySettings />} />
-              <Route path="/logs" element={<LogManagement />} />
-              <Route path="/test" element={<TestApi />} />
             </Routes>
           </Content>
         </Layout>

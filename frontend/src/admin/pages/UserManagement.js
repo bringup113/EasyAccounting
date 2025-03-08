@@ -45,6 +45,8 @@ import {
   resetUserPassword,
   generateRandomPassword
 } from '../../services/adminService';
+import dayjs from 'dayjs';
+import axios from 'axios';
 
 const { Option } = Select;
 
@@ -70,11 +72,9 @@ const UserManagement = () => {
   
   // 获取用户数据
   const fetchAllUsers = async () => {
-    console.log('开始获取活跃用户数据...');
     setLoading(true);
     try {
       const data = await fetchUsers();
-      console.log('获取到活跃用户数据:', data);
       
       if (data.success) {
         const formattedUsers = data.data.map(user => ({
@@ -88,29 +88,22 @@ const UserManagement = () => {
           lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'
         }));
         
-        console.log('格式化后的活跃用户数据:', formattedUsers);
         setUsers(formattedUsers);
-        console.log('活跃用户数据已更新到状态');
       } else {
-        console.error('获取活跃用户数据失败:', data);
         message.error(intl.formatMessage({ id: 'admin.users.fetchError', defaultMessage: '获取用户数据失败' }));
       }
     } catch (error) {
-      console.error('获取用户数据错误:', error);
       message.error(intl.formatMessage({ id: 'admin.users.fetchError', defaultMessage: '获取用户数据失败' }));
     } finally {
       setLoading(false);
-      console.log('活跃用户数据获取完成');
     }
   };
   
   // 获取已删除用户数据
   const fetchAllDeletedUsers = async () => {
-    console.log('开始获取已删除用户数据...');
     setDeletedLoading(true);
     try {
       const data = await fetchDeletedUsers();
-      console.log('获取到已删除用户数据:', data);
       
       if (data.success) {
         const formattedData = data.data.map(user => ({
@@ -123,19 +116,14 @@ const UserManagement = () => {
           createdAt: new Date(user.createdAt).toISOString().split('T')[0]
         }));
         
-        console.log('格式化后的已删除用户数据:', formattedData);
         setDeletedUsers(formattedData);
-        console.log('已删除用户数据已更新到状态');
       } else {
-        console.error('获取已删除用户数据失败:', data);
         message.error(intl.formatMessage({ id: 'admin.users.fetchDeletedError', defaultMessage: '获取已删除用户数据失败' }));
       }
     } catch (error) {
-      console.error('获取已删除用户数据错误:', error);
       message.error(intl.formatMessage({ id: 'admin.users.fetchDeletedError', defaultMessage: '获取已删除用户数据失败' }));
     } finally {
       setDeletedLoading(false);
-      console.log('已删除用户数据获取完成');
     }
   };
   
@@ -159,7 +147,7 @@ const UserManagement = () => {
         setAvailableUsers(availableUsersList);
       }
     } catch (error) {
-      console.error('获取可用用户错误:', error);
+      message.error('获取可用用户错误: ' + (error.response?.data?.message || error.message));
     }
   };
   
@@ -241,7 +229,6 @@ const UserManagement = () => {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      console.log('表单验证通过，提交的值:', values);
       
       if (editingUser) {
         // 更新用户
@@ -256,31 +243,20 @@ const UserManagement = () => {
           updateData.password = values.password;
         }
         
-        console.log('准备更新用户，用户ID:', editingUser.id, '更新数据:', updateData);
+        const result = await updateUser(editingUser.id, updateData);
         
-        try {
-          const result = await updateUser(editingUser.id, updateData);
-          console.log('更新用户结果:', result);
+        if (result.success) {
+          const { data } = result;
           
-          if (result.success) {
-            const { data } = result;
-            
-            if (data.success) {
-              message.success(intl.formatMessage({ id: 'admin.users.updateSuccess', defaultMessage: '用户更新成功' }));
-              setModalVisible(false); // 关闭模态框
-              fetchAllUsers(); // 重新获取用户列表
-            } else {
-              console.error('更新用户失败:', data);
-              message.error(data.message || intl.formatMessage({ id: 'admin.users.updateError', defaultMessage: '用户更新失败' }));
-            }
+          if (data.success) {
+            message.success(intl.formatMessage({ id: 'admin.users.updateSuccess', defaultMessage: '用户更新成功' }));
+            setModalVisible(false); // 关闭模态框
+            fetchAllUsers(); // 重新获取用户列表
           } else {
-            console.error('更新用户请求失败:', result);
-            message.error(result.data?.message || intl.formatMessage({ id: 'admin.users.updateError', defaultMessage: '用户更新失败' }));
+            message.error(data.message || intl.formatMessage({ id: 'admin.users.updateError', defaultMessage: '用户更新失败' }));
           }
-        } catch (updateError) {
-          console.error('更新用户时发生错误:', updateError);
-          console.error('错误详情:', updateError.response?.data || updateError.message);
-          message.error(updateError.response?.data?.message || intl.formatMessage({ id: 'admin.users.updateError', defaultMessage: '用户更新失败' }));
+        } else {
+          message.error(result.data?.message || intl.formatMessage({ id: 'admin.users.updateError', defaultMessage: '用户更新失败' }));
         }
       } else {
         // 创建用户
@@ -291,37 +267,26 @@ const UserManagement = () => {
           status: values.status ? 'active' : 'inactive' // 添加状态字段
         };
         
-        console.log('准备创建用户，用户数据:', userData);
+        const response = await createUser(userData);
         
-        try {
-          const response = await createUser(userData);
-          console.log('创建用户响应:', response);
+        if (response && response.data) {
+          const { data } = response;
           
-          if (response && response.data) {
-            const { data } = response;
-            
-            if (data.success) {
-              message.success(intl.formatMessage({ id: 'admin.users.createSuccess', defaultMessage: '用户创建成功' }));
-              setModalVisible(false); // 关闭模态框
-              fetchAllUsers(); // 重新获取用户列表
-            } else {
-              console.error('创建用户失败:', data);
-              message.error(data.message || intl.formatMessage({ id: 'admin.users.createError', defaultMessage: '用户创建失败' }));
-            }
+          if (data.success) {
+            message.success(intl.formatMessage({ id: 'admin.users.createSuccess', defaultMessage: '用户创建成功' }));
+            setModalVisible(false); // 关闭模态框
+            fetchAllUsers(); // 重新获取用户列表
           } else {
-            console.error('创建用户响应无效:', response);
-            message.error(intl.formatMessage({ id: 'admin.users.createError', defaultMessage: '用户创建失败' }));
+            message.error(data.message || intl.formatMessage({ id: 'admin.users.createError', defaultMessage: '用户创建失败' }));
           }
-        } catch (createError) {
-          console.error('创建用户时发生错误:', createError);
-          console.error('错误详情:', createError.response?.data || createError.message);
-          message.error(createError.response?.data?.message || intl.formatMessage({ id: 'admin.users.createError', defaultMessage: '用户创建失败' }));
+        } else {
+          message.error(intl.formatMessage({ id: 'admin.users.createError', defaultMessage: '用户创建失败' }));
         }
       }
       
       setModalVisible(false);
     } catch (validationError) {
-      console.error('表单验证失败:', validationError);
+      message.error('表单验证失败: ' + (validationError.response?.data?.message || validationError.message));
     }
   };
   
@@ -360,8 +325,7 @@ const UserManagement = () => {
         message.error(data.message || intl.formatMessage({ id: 'admin.users.deleteError', defaultMessage: '用户删除失败' }));
       }
     } catch (error) {
-      console.error('删除用户错误:', error);
-      message.error(error.response?.data?.message || intl.formatMessage({ id: 'admin.users.deleteError', defaultMessage: '用户删除失败' }));
+      message.error('删除用户错误: ' + (error.response?.data?.message || error.message));
     } finally {
       // 无论成功与否，都刷新数据并切换标签页
       refreshData();
@@ -371,12 +335,9 @@ const UserManagement = () => {
   // 刷新数据并切换标签页的辅助函数
   const refreshData = async () => {
     try {
-      console.log('开始刷新数据...');
-      // 设置加载状态
       setLoading(true);
       setDeletedLoading(true);
       
-      // 分别获取数据，不使用Promise.all，确保每个请求都能完成
       const usersData = await fetchUsers();
       if (usersData.success) {
         setUsers(usersData.data.map(user => ({
@@ -389,7 +350,6 @@ const UserManagement = () => {
           createdAt: new Date(user.createdAt).toISOString().split('T')[0],
           lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'
         })));
-        console.log('活跃用户数据已更新');
       }
       
       const deletedUsersData = await fetchDeletedUsers();
@@ -405,14 +365,10 @@ const UserManagement = () => {
         }));
         
         setDeletedUsers(formattedData);
-        console.log('已删除用户数据已更新');
       }
-      
-      console.log('数据刷新完成');
     } catch (error) {
-      console.error('刷新数据错误:', error);
+      message.error('刷新数据错误: ' + (error.response?.data?.message || error.message));
     } finally {
-      // 无论成功与否，都重置加载状态
       setLoading(false);
       setDeletedLoading(false);
     }
@@ -471,7 +427,6 @@ const UserManagement = () => {
         });
       }
     } catch (error) {
-      console.error('恢复用户错误:', error);
       message.error({
         content: intl.formatMessage({ 
           id: 'admin.users.restoreError', 

@@ -12,7 +12,7 @@ const {
 const router = express.Router();
 
 // 引入管理员认证中间件
-const { protectAdmin } = require('../middleware/auth');
+const { protectAdmin } = require('../middlewares/auth');
 
 // 公开路由
 router.post('/login', login);

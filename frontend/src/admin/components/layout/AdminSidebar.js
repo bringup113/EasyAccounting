@@ -25,7 +25,7 @@ const AdminSidebar = ({ collapsed }) => {
   // 获取当前路径的第一级路径
   const getSelectedKey = () => {
     const path = location.pathname.split('/')[2] || '';
-    if (path === 'logs' || path === 'api' || path === 'notifications' || path === 'security') {
+    if (path === 'notifications' || path === 'security') {
       return 'settings';
     }
     return path || 'dashboard';
@@ -56,9 +56,6 @@ const AdminSidebar = ({ collapsed }) => {
       case 'monitor':
         navigate('/admin/monitor');
         break;
-      case 'backups':
-        navigate('/admin/backups');
-        break;
       case 'system':
         navigate('/admin/settings');
         break;
@@ -67,12 +64,6 @@ const AdminSidebar = ({ collapsed }) => {
         break;
       case 'security':
         navigate('/admin/security');
-        break;
-      case 'logs':
-        navigate('/admin/logs');
-        break;
-      case 'api':
-        navigate('/admin/api');
         break;
       default:
         // 如果是settings，不做导航，因为它是一个有子菜单的项
@@ -105,11 +96,6 @@ const AdminSidebar = ({ collapsed }) => {
       label: <Link to="/admin/monitor"><FormattedMessage id="admin.menu.monitor" defaultMessage="系统监控" /></Link>
     },
     {
-      key: 'backups',
-      icon: <DatabaseOutlined />,
-      label: <Link to="/admin/backups"><FormattedMessage id="admin.menu.backups" defaultMessage="备份管理" /></Link>
-    },
-    {
       key: 'settings',
       icon: <SettingOutlined />,
       label: <FormattedMessage id="admin.menu.settings" defaultMessage="系统设置" />,
@@ -125,14 +111,6 @@ const AdminSidebar = ({ collapsed }) => {
         {
           key: 'security',
           label: renderSubMenuItem("/admin/security", "admin.menu.security", "安全设置")
-        },
-        {
-          key: 'logs',
-          label: renderSubMenuItem("/admin/logs", "admin.menu.logs", "日志管理")
-        },
-        {
-          key: 'api',
-          label: renderSubMenuItem("/admin/api", "admin.menu.api", "API管理")
         }
       ]
     }

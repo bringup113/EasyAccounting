@@ -100,7 +100,7 @@ export const restoreFromBackup = async (file, dispatch, intl) => {
       }));
     }
     
-    // TODO: 实现实际的恢复逻辑，这需要后端 API 支持
+    // 备份恢复功能尚未实现，这需要后端 API 支持
     // 这里只是一个示例，实际实现需要根据后端 API 设计
     
     // 发送成功通知
