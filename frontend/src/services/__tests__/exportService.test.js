@@ -171,7 +171,7 @@ describe('导出服务测试', () => {
         货币: 'CNY',
         类别: '餐饮',
         描述: '午餐',
-        相关人员: '张三, 李四',
+        人员机构: '张三, 李四',
         标签: '必要',
         创建时间: '2023-01-01',
         ID: 'tx1',
@@ -198,7 +198,7 @@ describe('导出服务测试', () => {
       expect(result).toHaveLength(1);
       expect(result[0].账户).toBe('');
       expect(result[0].类别).toBe('');
-      expect(result[0].相关人员).toBe('');
+      expect(result[0].人员机构).toBe('');
       expect(result[0].标签).toBe('');
     });
   });

@@ -1,15 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../services/api';
 
 // 获取分类列表
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async (bookId, { rejectWithValue }) => {
     try {
-      const res = await axios.get('/api/categories', { params: { bookId } });
+      const res = await api.get('/categories', { params: { bookId } });
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取分类失败');
     }
   }
 );
@@ -19,10 +19,10 @@ export const fetchCategory = createAsyncThunk(
   'categories/fetchCategory',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`/api/categories/${id}`);
+      const res = await api.get(`/categories/${id}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取分类失败');
     }
   }
 );
@@ -32,10 +32,10 @@ export const createCategory = createAsyncThunk(
   'categories/createCategory',
   async (categoryData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('/api/categories', categoryData);
+      const res = await api.post('/categories', categoryData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '创建分类失败');
     }
   }
 );
@@ -45,10 +45,10 @@ export const updateCategory = createAsyncThunk(
   'categories/updateCategory',
   async ({ id, categoryData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`/api/categories/${id}`, categoryData);
+      const res = await api.put(`/categories/${id}`, categoryData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '更新分类失败');
     }
   }
 );
@@ -58,10 +58,10 @@ export const deleteCategory = createAsyncThunk(
   'categories/deleteCategory',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/categories/${id}`);
+      await api.delete(`/categories/${id}`);
       return id;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '删除分类失败');
     }
   }
 );

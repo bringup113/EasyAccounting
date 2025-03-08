@@ -48,8 +48,27 @@ const NotificationCenter = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const intl = useIntl();
 
+  // 初始加载通知
   useEffect(() => {
     dispatch(fetchNotifications());
+  }, [dispatch]);
+
+  // 定期检查并删除过期通知（每天检查一次）
+  useEffect(() => {
+    // 设置每天检查一次
+    const checkInterval = 24 * 60 * 60 * 1000; // 24小时
+    console.log('设置通知自动清理定时器，间隔：', checkInterval, 'ms');
+    
+    const intervalId = setInterval(() => {
+      console.log('执行定期检查，删除已读且超过7天的通知');
+      dispatch(fetchNotifications());
+    }, checkInterval);
+    
+    // 清理函数
+    return () => {
+      console.log('清除通知自动清理定时器');
+      clearInterval(intervalId);
+    };
   }, [dispatch]);
 
   const handleVisibleChange = (newVisible) => {

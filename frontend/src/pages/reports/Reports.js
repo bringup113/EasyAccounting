@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, Tabs, DatePicker, Button, Select, 
-  Radio, Row, Col, Statistic, Divider, 
-  Typography, Empty, Spin, Space 
+  Radio, Typography, Empty, Spin
 } from 'antd';
 import { 
   BarChartOutlined, PieChartOutlined, 
@@ -19,9 +18,7 @@ import ReactECharts from 'echarts-for-react';
 import './Reports.css';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 const Reports = () => {
   const dispatch = useDispatch();
@@ -555,41 +552,39 @@ const Reports = () => {
                   activeKey={activeTab} 
                   onChange={setActiveTab}
                   className="report-tabs"
-                >
-                  <TabPane 
-                    tab={
-                      <span>
-                        <PieChartOutlined />
-                        类别分析
-                      </span>
-                    } 
-                    key="category"
-                  >
-                    {renderCategoryChart()}
-                  </TabPane>
-                  <TabPane 
-                    tab={
-                      <span>
-                        <LineChartOutlined />
-                        收支趋势
-                      </span>
-                    } 
-                    key="trend"
-                  >
-                    {renderTrendChart()}
-                  </TabPane>
-                  <TabPane 
-                    tab={
-                      <span>
-                        <BarChartOutlined />
-                        账户分析
-                      </span>
-                    } 
-                    key="account"
-                  >
-                    {renderAccountChart()}
-                  </TabPane>
-                </Tabs>
+                  items={[
+                    {
+                      key: "category",
+                      label: (
+                        <span>
+                          <PieChartOutlined />
+                          类别分析
+                        </span>
+                      ),
+                      children: renderCategoryChart()
+                    },
+                    {
+                      key: "trend",
+                      label: (
+                        <span>
+                          <LineChartOutlined />
+                          收支趋势
+                        </span>
+                      ),
+                      children: renderTrendChart()
+                    },
+                    {
+                      key: "account",
+                      label: (
+                        <span>
+                          <BarChartOutlined />
+                          账户分析
+                        </span>
+                      ),
+                      children: renderAccountChart()
+                    }
+                  ]}
+                />
               </>
             )}
           </Card>

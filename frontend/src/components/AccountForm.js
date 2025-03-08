@@ -13,26 +13,115 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
   const intl = useIntl();
   const { loading, error } = useSelector((state) => state.accounts);
   const { currentBook } = useSelector((state) => state.books);
+  const { user } = useSelector((state) => state.auth);
   const [hasCurrencyChanged, setHasCurrencyChanged] = useState(false);
   const [initialCurrency, setInitialCurrency] = useState(null);
+  const [availableCurrencies, setAvailableCurrencies] = useState([]);
 
-  // 使用useMemo获取当前账本的货币列表
-  const currencies = useMemo(() => {
-    if (currentBook?.currencies && currentBook.currencies.length > 0) {
-      return currentBook.currencies;
+  // 从localStorage获取可用货币列表，使用用户ID作为键
+  useEffect(() => {
+    try {
+      // 确保用户已登录
+      if (user && user._id) {
+        const userSpecificKey = `availableCurrencies_${user._id}`;
+        const savedCurrencies = localStorage.getItem(userSpecificKey);
+        console.log('从localStorage获取的货币设置:', savedCurrencies);
+        if (savedCurrencies) {
+          const parsedCurrencies = JSON.parse(savedCurrencies);
+          console.log('解析后的货币设置:', parsedCurrencies);
+          setAvailableCurrencies(parsedCurrencies);
+        } else {
+          // 检查是否有全局设置可以迁移
+          const globalCurrencies = localStorage.getItem('availableCurrencies');
+          if (globalCurrencies) {
+            try {
+              const parsedGlobalCurrencies = JSON.parse(globalCurrencies);
+              if (parsedGlobalCurrencies && parsedGlobalCurrencies.length > 0) {
+                // 迁移全局设置到用户特定设置
+                setAvailableCurrencies(parsedGlobalCurrencies);
+                localStorage.setItem(userSpecificKey, globalCurrencies);
+                console.log('已将全局货币设置迁移到用户特定设置');
+              } else {
+                // 如果全局设置为空，使用默认设置
+                const defaultCurrencies = [
+                  { code: 'CNY', name: '人民币', symbol: '¥', rate: 1, isSystemDefault: true },
+                  { code: 'USD', name: '美元', symbol: '$', rate: 0.14, isSystemDefault: true },
+                  { code: 'THB', name: '泰铢', symbol: '฿', rate: 4.5, isSystemDefault: true }
+                ];
+                setAvailableCurrencies(defaultCurrencies);
+                // 保存默认设置到用户特定的存储中
+                localStorage.setItem(userSpecificKey, JSON.stringify(defaultCurrencies));
+              }
+            } catch (e) {
+              console.error('解析全局货币设置失败:', e);
+              // 使用默认设置
+              const defaultCurrencies = [
+                { code: 'CNY', name: '人民币', symbol: '¥', rate: 1, isSystemDefault: true },
+                { code: 'USD', name: '美元', symbol: '$', rate: 0.14, isSystemDefault: true },
+                { code: 'THB', name: '泰铢', symbol: '฿', rate: 4.5, isSystemDefault: true }
+              ];
+              setAvailableCurrencies(defaultCurrencies);
+              // 保存默认设置到用户特定的存储中
+              localStorage.setItem(userSpecificKey, JSON.stringify(defaultCurrencies));
+            }
+          } else {
+            // 如果没有全局设置，使用默认设置
+            const defaultCurrencies = [
+              { code: 'CNY', name: '人民币', symbol: '¥', rate: 1, isSystemDefault: true },
+              { code: 'USD', name: '美元', symbol: '$', rate: 0.14, isSystemDefault: true },
+              { code: 'THB', name: '泰铢', symbol: '฿', rate: 4.5, isSystemDefault: true }
+            ];
+            setAvailableCurrencies(defaultCurrencies);
+            // 保存默认设置到用户特定的存储中
+            localStorage.setItem(userSpecificKey, JSON.stringify(defaultCurrencies));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('加载货币数据失败:', error);
     }
-    // 如果账本没有设置货币，返回默认货币列表
-    return [
-      { code: 'CNY', name: '人民币', symbol: '¥', exchangeRate: 1 },
-      { code: 'USD', name: '美元', symbol: '$', exchangeRate: 7.2 },
-      { code: 'EUR', name: '欧元', symbol: '€', exchangeRate: 7.8 }
-    ];
-  }, [currentBook]);
+  }, [user]);
+
+  // 使用useMemo获取当前账本的货币列表和设置中的货币列表
+  const currencies = useMemo(() => {
+    let result = [];
+    
+    // 首先添加账本中的货币列表
+    if (currentBook?.currencies && currentBook.currencies.length > 0) {
+      result = [...currentBook.currencies];
+    }
+    
+    // 然后添加设置中的货币列表（去重）
+    if (availableCurrencies && availableCurrencies.length > 0) {
+      availableCurrencies.forEach(currency => {
+        // 检查是否已经存在相同code的货币
+        if (!result.some(c => c.code === currency.code)) {
+          result.push(currency);
+        }
+      });
+    }
+    
+    // 如果结果为空，返回默认货币列表
+    if (result.length === 0) {
+      return [
+        { code: 'CNY', name: '人民币', symbol: '¥', rate: 1 },
+        { code: 'USD', name: '美元', symbol: '$', rate: 7.2 },
+        { code: 'EUR', name: '欧元', symbol: '€', rate: 7.8 }
+      ];
+    }
+    
+    return result;
+  }, [currentBook, availableCurrencies]);
 
   useEffect(() => {
     // 调试输出
     console.log('当前账本:', currentBook);
     console.log('可用货币:', currencies);
+    console.log('设置中的可用货币:', availableCurrencies);
+    
+    // 添加更详细的调试信息
+    console.log('当前账本完整信息:', JSON.stringify(currentBook, null, 2));
+    console.log('货币列表详细信息:', JSON.stringify(currencies, null, 2));
     
     if (account) {
       form.setFieldsValue({
@@ -47,7 +136,7 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
         currency: currentBook?.defaultCurrency || 'CNY',
       });
     }
-  }, [account, form, currentBook, currencies]);
+  }, [account, form, currentBook, currencies, availableCurrencies]);
 
   useEffect(() => {
     if (error) {
@@ -77,7 +166,7 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
       return;
     }
 
-    // 确保货币在账本的货币列表中
+    // 确保货币在账本的货币列表或可用货币列表中
     const selectedCurrency = currencies.find(c => c.code === values.currency);
     if (!selectedCurrency) {
       sendErrorNotification(dispatch, {
@@ -87,14 +176,17 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
       return;
     }
 
+    // 准备账户数据，确保使用正确的货币属性名称
+    const accountData = {
+      ...values,
+      bookId: currentBook._id
+    };
+
     if (account) {
       // 更新账户
       dispatch(updateAccount({ 
         id: account._id, 
-        accountData: {
-          ...values,
-          bookId: currentBook._id
-        }
+        accountData
       }))
         .unwrap()
         .then(() => {
@@ -115,10 +207,7 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
         });
     } else {
       // 创建账户
-      dispatch(createAccount({
-        ...values,
-        bookId: currentBook._id
-      }))
+      dispatch(createAccount(accountData))
         .unwrap()
         .then(() => {
           sendAccountNotification(dispatch, {
@@ -184,11 +273,23 @@ const AccountForm = ({ account, onSuccess, onCancel }) => {
           onChange={handleCurrencyChange}
           disabled={account && account.hasTransactions} // 如果账户已有交易记录，禁止修改货币
         >
-          {currencies.map(currency => (
-            <Option key={currency.code} value={currency.code}>
-              {currency.name} ({currency.code} - {currency.symbol})
-            </Option>
-          ))}
+          {/* 
+            修复货币列表显示问题：
+            1. 添加条件渲染，确保currencies存在且有元素时才渲染货币选项
+            2. 如果currencies不存在或为空，提供默认选项
+            3. 从设置中获取货币列表，确保使用正确的属性名称（rate而不是exchangeRate）
+            这样可以防止在currencies未加载完成时出现空白下拉列表
+          */}
+          {currencies && currencies.length > 0 ? (
+            currencies.map(currency => (
+              <Option key={currency.code} value={currency.code}>
+                {currency.name} ({currency.code} - {currency.symbol}) 
+                {currency.rate && currency.rate !== 1 ? ` - 汇率: ${currency.rate}` : ''}
+              </Option>
+            ))
+          ) : (
+            <Option value="CNY">人民币 (CNY - ¥)</Option>
+          )}
         </Select>
       </Form.Item>
 

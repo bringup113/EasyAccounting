@@ -1,41 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, Calendar, Badge, Button, Statistic, Card, Select, Empty, Typography, Modal, Avatar, Tooltip, Divider, Radio, Space, DatePicker } from 'antd';
-import { PlusOutlined, BookOutlined, ArrowUpOutlined, ArrowDownOutlined, BarChartOutlined, CalendarOutlined, WalletOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Row, Col, Calendar, Button, Statistic, Card, Empty, Radio, Space, DatePicker } from 'antd';
+import { PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, BarChartOutlined, WalletOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import ReactECharts from 'echarts-for-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { fetchTransactions } from '../store/transactionSlice';
-import { fetchBooks } from '../store/bookSlice';
 import { fetchAccounts } from '../store/accountSlice';
-import BookForm from '../components/BookForm';
 import './Dashboard.css';
-
-const { Option } = Select;
-const { Title, Paragraph, Text } = Typography;
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { books, currentBook } = useSelector((state) => state.books);
-  const { transactions, loading } = useSelector((state) => state.transactions);
+  const { currentBook } = useSelector((state) => state.books);
+  const { transactions } = useSelector((state) => state.transactions);
   const { accounts } = useSelector((state) => state.accounts);
   const navigate = useNavigate();
   const location = useLocation();
   const intl = useIntl();
   
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [selectedMonth, setSelectedMonth] = useState(dayjs());
-  const [isCreateBookModalVisible, setIsCreateBookModalVisible] = useState(false);
   const [calendarMode, setCalendarMode] = useState('month');
 
+  // 从URL中获取日期参数
   useEffect(() => {
-    if (user) {
-      dispatch(fetchBooks());
+    const searchParams = new URLSearchParams(location.search);
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      const parsedDate = dayjs(dateParam);
+      if (parsedDate.isValid()) {
+        setSelectedDate(parsedDate);
+      }
     }
-  }, [dispatch, user]);
+  }, [location.search]);
 
+  // 加载交易数据和账户数据
   useEffect(() => {
     if (currentBook && currentBook._id) {
       // 创建新的dayjs对象，避免引用问题
@@ -52,153 +50,40 @@ const Dashboard = () => {
         endDate
       });
       
-      dispatch(fetchTransactions({ 
-        bookId: currentBook._id, 
-        startDate, 
-        endDate 
-      }));
+      // 只在Dashboard页面加载交易数据，避免与TransactionManagement页面冲突
+      if (location.pathname === '/dashboard') {
+        dispatch(fetchTransactions({ 
+          bookId: currentBook._id, 
+          startDate, 
+          endDate 
+        }));
+      }
       
       dispatch(fetchAccounts(currentBook._id));
     } else {
       console.log('未选择账本，不加载数据');
     }
-  }, [dispatch, currentBook, selectedDate]);
+  }, [dispatch, currentBook, selectedDate, location.pathname]);
 
-  // 从URL参数中获取日期
+  // 监听路由变化，更新选中日期
   useEffect(() => {
-    // 如果没有选择账本，则不处理日期参数
+    // 如果没有选择账本，重定向到首页
     if (!currentBook) {
-      console.log('未选择账本，不处理日期参数');
+      navigate('/home');
       return;
     }
     
-    try {
-      const params = new URLSearchParams(location.search);
-      const dateParam = params.get('date');
-      
-      console.log('解析URL日期参数:', { 
-        dateParam,
-        pathname: location.pathname,
-        search: location.search,
-        hasCurrentBook: !!currentBook
-      });
-      
-      if (dateParam) {
-        // 解析YYYY-MM格式
-        if (dateParam.length === 7 && dateParam.includes('-')) {
-          const [yearStr, monthStr] = dateParam.split('-');
-          const year = parseInt(yearStr, 10);
-          const month = parseInt(monthStr, 10) - 1; // 月份从0开始
-          
-          // 创建新的日期对象
-          const newDate = dayjs().year(year).month(month).date(1);
-          
-          console.log('解析YYYY-MM格式:', { 
-            原始参数: dateParam, 
-            年: year,
-            月: month + 1,
-            新日期: newDate.format('YYYY-MM-DD')
-          });
-          
-          // 验证日期是否有效
-          if (newDate.isValid()) {
-            setSelectedDate(newDate);
-          } else {
-            console.error('解析出的日期无效:', dateParam);
-            resetToCurrentMonth();
-          }
-        } else {
-          console.error('日期参数格式不正确:', dateParam);
-          resetToCurrentMonth();
-        }
-      } else {
-        // 如果没有日期参数，默认使用当月第一天
-        console.log('没有日期参数，使用当前月份');
-        resetToCurrentMonth();
-      }
-    } catch (error) {
-      console.error('处理日期参数出错:', error);
-      resetToCurrentMonth();
-    }
-  }, [location.search, navigate, currentBook]);
-  
-  // 重置为当前月份
-  const resetToCurrentMonth = () => {
-    const today = dayjs().date(1); // 当月第一天
-    console.log('重置为当前月份:', today.format('YYYY-MM-DD'));
-    setSelectedDate(today);
+    const params = new URLSearchParams(location.search);
+    const dateParam = params.get('date');
     
-    // 更新URL，但不触发导航
-    const newUrl = `/dashboard?date=${today.format('YYYY-MM')}`;
-    window.history.replaceState(null, '', newUrl);
-  };
-
-  // 处理创建账本成功
-  const handleCreateBookSuccess = () => {
-    setIsCreateBookModalVisible(false);
-    dispatch(fetchBooks());
-  };
-
-  // 欢迎页面
-  const renderWelcomePage = () => {
-    return (
-      <div className="welcome-container">
-        <Title level={2} className="welcome-title">
-          <FormattedMessage id="app.welcome.title" defaultMessage="欢迎使用记账软件" />
-        </Title>
-        <Paragraph className="welcome-description">
-          <FormattedMessage id="app.welcome.description" defaultMessage="这是一个帮助您管理个人或家庭财务的工具，让记账变得简单高效。" />
-        </Paragraph>
-        
-        {books && books.length > 0 ? (
-          <div>
-            <Title level={4} className="welcome-subtitle">
-              <FormattedMessage id="app.welcome.select" defaultMessage="请选择一个账本开始使用" />
-            </Title>
-            <Row justify="center" gutter={[24, 24]} style={{ maxWidth: '900px', margin: '0 auto' }}>
-              {books.map(book => (
-                <Col xs={24} sm={12} md={8} key={book._id}>
-                  <Card
-                    hoverable
-                    className="book-card"
-                    onClick={() => dispatch({ type: 'books/setCurrentBook', payload: book })}
-                  >
-                    <BookOutlined className="book-card-icon" />
-                    <Title level={4}>{book.name}</Title>
-                    <Paragraph ellipsis={{ rows: 2 }}>{book.description || '无描述'}</Paragraph>
-                    <Text type="secondary">{book.defaultCurrency}</Text>
-                  </Card>
-                </Col>
-              ))}
-              <Col xs={24} sm={12} md={8}>
-                <div 
-                  className="create-book-card"
-                  onClick={() => setIsCreateBookModalVisible(true)}
-                >
-                  <PlusOutlined className="book-card-icon" />
-                  <div><FormattedMessage id="book.create" defaultMessage="创建新账本" /></div>
-                </div>
-              </Col>
-            </Row>
-          </div>
-        ) : (
-          <Empty
-            description={<FormattedMessage id="book.noBooks" defaultMessage="您还没有创建账本" />}
-            style={{ marginTop: 50 }}
-          >
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={() => setIsCreateBookModalVisible(true)}
-              size="large"
-            >
-              <FormattedMessage id="book.create.button" defaultMessage="创建账本" />
-            </Button>
-          </Empty>
-        )}
-      </div>
-    );
-  };
+    if (dateParam) {
+      setSelectedDate(dayjs(dateParam));
+    } else {
+      // 如果URL中没有日期参数，则添加当前月份作为参数
+      const today = dayjs().format('YYYY-MM');
+      navigate(`${location.pathname}?date=${today}`, { replace: true });
+    }
+  }, [navigate, location.search, location.pathname, currentBook]);
 
   // 日历单元格渲染
   const dateCellRender = (value) => {
@@ -305,15 +190,12 @@ const Dashboard = () => {
       // 更新URL
       navigate(`/dashboard?date=${newDate.format('YYYY-MM')}`);
       
-      // 如果有交易记录，跳转到交易记录页面
+      // 无论是否有交易记录，都跳转到交易记录页面
       const dateStr = date.format('YYYY-MM-DD');
-      const hasTransactions = transactions.some(
-        (t) => dayjs(t.date).format('YYYY-MM-DD') === dateStr
-      );
+      console.log('从Dashboard跳转到交易记录页面，日期：', dateStr);
       
-      if (hasTransactions) {
-        navigate(`/transactions?date=${dateStr}`);
-      }
+      // 使用单个日期参数跳转，确保交易记录页面只显示该日的交易
+      navigate(`/transactions?date=${dateStr}`);
     } 
     // 如果是从年视图点击月份，切换到月视图
     else if (source === 'month' && calendarMode === 'year') {
@@ -331,146 +213,6 @@ const Dashboard = () => {
     
     // 更新URL
     navigate(`/dashboard?date=${newDate.format('YYYY-MM')}`);
-  };
-
-  // 收支趋势图表配置
-  const getChartOption = () => {
-    if (!transactions || transactions.length === 0) return {};
-
-    // 获取当月的每一天
-    const daysInMonth = selectedDate.daysInMonth();
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
-    // 按日期分组计算收入和支出
-    const incomeData = Array(daysInMonth).fill(0);
-    const expenseData = Array(daysInMonth).fill(0);
-    
-    transactions.forEach((t) => {
-      const transactionDate = dayjs(t.date);
-      if (
-        transactionDate.month() === selectedDate.month() &&
-        transactionDate.year() === selectedDate.year()
-      ) {
-        const day = transactionDate.date() - 1;
-        if (t.type === 'income') {
-          incomeData[day] += t.amount;
-        } else if (t.type === 'expense') {
-          expenseData[day] += t.amount;
-        }
-      }
-    });
-
-    return {
-      tooltip: {
-        trigger: 'axis',
-        formatter: function(params) {
-          let result = `${selectedDate.format('YYYY-MM')}-${params[0].axisValue}`;
-          params.forEach(param => {
-            const color = param.seriesName === '收入' ? '#52c41a' : '#f5222d';
-            result += `<br/><span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:${color};"></span>${param.seriesName}: ${param.value.toFixed(2)}`;
-          });
-          return result;
-        }
-      },
-      legend: {
-        data: ['收入', '支出'],
-        icon: 'circle',
-        itemWidth: 10,
-        itemHeight: 10,
-        textStyle: {
-          fontSize: 12
-        }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: days,
-        axisLine: {
-          lineStyle: {
-            color: '#e0e0e0'
-          }
-        },
-        axisLabel: {
-          color: '#666',
-          fontSize: 12
-        }
-      },
-      yAxis: {
-        type: 'value',
-        axisLine: {
-          show: false
-        },
-        axisTick: {
-          show: false
-        },
-        axisLabel: {
-          color: '#666',
-          fontSize: 12
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#f0f0f0'
-          }
-        }
-      },
-      series: [
-        {
-          name: '收入',
-          type: 'line',
-          data: incomeData,
-          color: '#52c41a',
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: {
-            width: 3
-          },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [{
-                offset: 0, color: 'rgba(82, 196, 26, 0.2)'
-              }, {
-                offset: 1, color: 'rgba(82, 196, 26, 0.01)'
-              }]
-            }
-          }
-        },
-        {
-          name: '支出',
-          type: 'line',
-          data: expenseData,
-          color: '#f5222d',
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: {
-            width: 3
-          },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [{
-                offset: 0, color: 'rgba(245, 34, 45, 0.2)'
-              }, {
-                offset: 1, color: 'rgba(245, 34, 45, 0.01)'
-              }]
-            }
-          }
-        }
-      ]
-    };
   };
 
   // 前进一个月
@@ -578,224 +320,198 @@ const Dashboard = () => {
     }
   };
 
-  // 添加调试代码，检查国际化是否正常工作
-  useEffect(() => {
-    console.log('当前语言环境:', intl.locale);
-    console.log('上个月翻译:', intl.formatMessage({ id: 'transaction.previousMonth', defaultMessage: '上个月' }));
-    console.log('下个月翻译:', intl.formatMessage({ id: 'transaction.nextMonth', defaultMessage: '下个月' }));
-  }, [intl]);
-
   return (
     <div className="dashboard-container">
-      {!currentBook ? (
-        renderWelcomePage()
-      ) : (
-        <>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} sm={24} md={16} lg={17} xl={17}>
-              <div className="calendar-container">
-                <Calendar
-                  value={selectedDate}
-                  onSelect={onSelect}
-                  onPanelChange={onPanelChange}
-                  cellRender={cellRender}
-                  fullscreen={true}
-                  mode={calendarMode}
-                  headerRender={({ value, type, onChange, onTypeChange }) => {
-                    const current = value.clone();
-                    const year = value.year();
-                    const month = value.month();
-                    
-                    return (
-                      <div className="calendar-header">
-                        <div className="calendar-header-left">
-                          <Space>
-                            <Button 
-                              type="text" 
-                              icon={<LeftOutlined />} 
-                              onClick={goToPreviousMonth}
-                              title={intl.formatMessage({ id: 'transaction.previousMonth', defaultMessage: '上个月' })}
-                            />
-                            <DatePicker 
-                              value={selectedDate} 
-                              onChange={handleMonthChange}
-                              allowClear={false}
-                              picker="month"
-                              format="YYYY-MM"
-                            />
-                            <Button 
-                              type="text" 
-                              icon={<RightOutlined />} 
-                              onClick={goToNextMonth}
-                              title={intl.formatMessage({ id: 'transaction.nextMonth', defaultMessage: '下个月' })}
-                            />
-                          </Space>
-                        </div>
-                        <div className="calendar-header-right">
-                          <Radio.Group 
-                            value={calendarMode} 
-                            onChange={(e) => {
-                              setCalendarMode(e.target.value);
-                              onTypeChange(e.target.value);
-                            }}
-                            buttonStyle="solid"
-                            size="small"
-                          >
-                            <Radio.Button value="month">
-                              <FormattedMessage id="dashboard.month" defaultMessage="Month" />
-                            </Radio.Button>
-                            <Radio.Button value="year">
-                              <FormattedMessage id="dashboard.year" defaultMessage="Year" />
-                            </Radio.Button>
-                          </Radio.Group>
-                        </div>
-                      </div>
-                    );
-                  }}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={24} md={24} lg={16} xl={17}>
+          <div className="calendar-container">
+            <Calendar
+              value={selectedDate}
+              onSelect={onSelect}
+              onPanelChange={onPanelChange}
+              cellRender={cellRender}
+              fullscreen={true}
+              mode={calendarMode}
+              headerRender={({ value, type, onChange, onTypeChange }) => {
+                return (
+                  <div className="calendar-header">
+                    <div className="calendar-header-left">
+                      {/* 左侧区域保留为空 */}
+                    </div>
+                    <div className="calendar-header-right">
+                      <Space size="middle" align="center" wrap>
+                        <Button 
+                          type="primary"
+                          shape="circle"
+                          icon={<LeftOutlined />} 
+                          onClick={goToPreviousMonth}
+                          title={intl.formatMessage({ id: 'transaction.previousMonth', defaultMessage: '上个月' })}
+                          size="small"
+                          style={{ background: '#f0f5ff', color: '#1890ff', border: 'none' }}
+                        />
+                        <DatePicker 
+                          value={selectedDate} 
+                          onChange={handleMonthChange}
+                          allowClear={false}
+                          picker="month"
+                          format="YYYY年MM月"
+                          style={{ 
+                            width: '120px', 
+                            borderRadius: '6px',
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)'
+                          }}
+                          popupStyle={{ 
+                            borderRadius: '8px',
+                            boxShadow: '0 3px 12px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Button 
+                          type="primary"
+                          shape="circle"
+                          icon={<RightOutlined />} 
+                          onClick={goToNextMonth}
+                          title={intl.formatMessage({ id: 'transaction.nextMonth', defaultMessage: '下个月' })}
+                          size="small"
+                          style={{ background: '#f0f5ff', color: '#1890ff', border: 'none' }}
+                        />
+                        <Radio.Group 
+                          value={calendarMode} 
+                          onChange={(e) => {
+                            setCalendarMode(e.target.value);
+                            onTypeChange(e.target.value);
+                          }}
+                          buttonStyle="solid"
+                          size="small"
+                          style={{ marginLeft: '8px' }}
+                        >
+                          <Radio.Button value="month">
+                            <FormattedMessage id="dashboard.month" defaultMessage="Month" />
+                          </Radio.Button>
+                          <Radio.Button value="year">
+                            <FormattedMessage id="dashboard.year" defaultMessage="Year" />
+                          </Radio.Button>
+                        </Radio.Group>
+                      </Space>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+        </Col>
+        <Col xs={24} sm={24} md={24} lg={8} xl={7}>
+          <Card 
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                <BarChartOutlined style={{ marginRight: 8 }} />
+                {calendarMode === 'year' 
+                  ? `${selectedDate.format('YYYY年')}`
+                  : `${selectedDate.format('YYYY年MM月')}`}
+                <FormattedMessage 
+                  id="dashboard.statistics" 
+                  defaultMessage="Statistics" 
                 />
               </div>
-            </Col>
-            <Col xs={24} sm={24} md={8} lg={7} xl={7}>
-              <Card 
-                title={
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <BarChartOutlined style={{ marginRight: 8 }} />
-                    {calendarMode === 'year' 
-                      ? `${selectedDate.format('YYYY年')}`
-                      : `${selectedDate.format('YYYY年MM月')}`}
-                    <FormattedMessage 
-                      id="dashboard.statistics" 
-                      defaultMessage="Statistics" 
-                    />
-                  </div>
-                } 
-                className="stat-card"
-              >
-                <Row gutter={24}>
-                  <Col span={8}>
-                    <Statistic
-                      title={<FormattedMessage id="dashboard.income" defaultMessage="Income" />}
-                      value={stats.income}
-                      precision={2}
-                      valueStyle={{ color: '#52c41a' }}
-                      prefix={<ArrowUpOutlined />}
-                      suffix={currencySymbol}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Statistic
-                      title={<FormattedMessage id="dashboard.expense" defaultMessage="Expense" />}
-                      value={stats.expense}
-                      precision={2}
-                      valueStyle={{ color: '#f5222d' }}
-                      prefix={<ArrowDownOutlined />}
-                      suffix={currencySymbol}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Statistic
-                      title={<FormattedMessage id="dashboard.balance" defaultMessage="Balance" />}
-                      value={stats.balance}
-                      precision={2}
-                      valueStyle={{ color: stats.balance >= 0 ? '#1890ff' : '#f5222d' }}
-                      suffix={currencySymbol}
-                    />
-                  </Col>
-                </Row>
-              </Card>
+            } 
+            className="stat-card"
+          >
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={8} md={8} lg={24} xl={8}>
+                <Statistic
+                  title={<FormattedMessage id="dashboard.income" defaultMessage="Income" />}
+                  value={stats.income}
+                  precision={2}
+                  valueStyle={{ color: '#52c41a' }}
+                  prefix={<ArrowUpOutlined />}
+                  suffix={currencySymbol}
+                />
+              </Col>
+              <Col xs={24} sm={8} md={8} lg={24} xl={8}>
+                <Statistic
+                  title={<FormattedMessage id="dashboard.expense" defaultMessage="Expense" />}
+                  value={stats.expense}
+                  precision={2}
+                  valueStyle={{ color: '#f5222d' }}
+                  prefix={<ArrowDownOutlined />}
+                  suffix={currencySymbol}
+                />
+              </Col>
+              <Col xs={24} sm={8} md={8} lg={24} xl={8}>
+                <Statistic
+                  title={<FormattedMessage id="dashboard.balance" defaultMessage="Balance" />}
+                  value={stats.balance}
+                  precision={2}
+                  valueStyle={{ color: stats.balance >= 0 ? '#1890ff' : '#f5222d' }}
+                  suffix={currencySymbol}
+                />
+              </Col>
+            </Row>
+          </Card>
 
-              <Card 
-                title={
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <WalletOutlined style={{ marginRight: 8 }} />
-                    <FormattedMessage id="account.totalAssets" defaultMessage="Account Balance" />
-                  </div>
-                } 
-                className="account-balance-card"
-                extra={
-                  <Button 
-                    type="link" 
-                    size="small"
-                    icon={<PlusOutlined />}
-                    onClick={() => navigate('/accounts')}
-                  >
-                    <FormattedMessage id="account.management" defaultMessage="Manage Accounts" />
-                  </Button>
-                }
+          <Card 
+            title={
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <WalletOutlined style={{ marginRight: 8 }} />
+                <FormattedMessage id="account.totalAssets" defaultMessage="Account Balance" />
+              </div>
+            } 
+            className="account-balance-card"
+            extra={
+              <Button 
+                type="link" 
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/accounts')}
               >
-                <div className="account-list-wrapper">
-                  {accounts.length > 0 ? (
-                    accounts.map((account) => {
-                      const currency = currentBook.currencies.find(c => c.code === account.currency);
-                      const currentBalance = account.initialBalance + 
-                        (account.totalIncome || 0) - (account.totalExpense || 0);
-                      
-                      // 获取本位币信息
-                      const defaultCurrency = currentBook.currencies.find(c => c.code === currentBook.defaultCurrency);
-                      
-                      return (
-                        <div key={account._id} className="account-item" onClick={() => navigate('/accounts')}>
-                          <div className="account-info">
-                            <div className="account-icon">
-                              <WalletOutlined />
-                            </div>
-                            <div>
-                              <div className="account-name">{account.name}</div>
-                              <span className="account-currency">{currency?.code || ''}</span>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="account-balance">
-                              {currency?.symbol || ''} {currentBalance.toFixed(2)}
-                            </div>
-                            {currency && defaultCurrency && currency.code !== currentBook.defaultCurrency && (
-                              <div className="account-balance-secondary">
-                                ≈ {defaultCurrency?.symbol || ''} {(currentBalance / (currency.exchangeRate || 1)).toFixed(2)}
-                              </div>
-                            )}
-                          </div>
+                <FormattedMessage id="account.management" defaultMessage="Manage Accounts" />
+              </Button>
+            }
+          >
+            <div className="account-list-wrapper">
+              {accounts.length > 0 ? (
+                accounts.map((account) => {
+                  const currency = currentBook.currencies.find(c => c.code === account.currency);
+                  const currentBalance = account.initialBalance + 
+                    (account.totalIncome || 0) - (account.totalExpense || 0);
+                  
+                  // 获取本位币信息
+                  const defaultCurrency = currentBook.currencies.find(c => c.code === currentBook.defaultCurrency);
+                  
+                  return (
+                    <div key={account._id} className="account-item">
+                      <div className="account-info">
+                        <div className="account-icon">
+                          <WalletOutlined />
                         </div>
-                      );
-                    })
-                  ) : (
-                    <Empty 
-                      description={<FormattedMessage id="account.empty" defaultMessage="No accounts yet" />} 
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      style={{ margin: '24px 0' }}
-                    />
-                  )}
-                </div>
-              </Card>
-            </Col>
-          </Row>
-
-          <div className="chart-container">
-            <h3 className="chart-title">
-              <BarChartOutlined style={{ marginRight: 8 }} />
-              <FormattedMessage 
-                id="dashboard.monthlyTrend" 
-                defaultMessage="Monthly Income/Expense Trend" 
-              />
-              {` (${selectedDate.format('YYYY-MM')})`}
-            </h3>
-            <ReactECharts option={getChartOption()} style={{ height: 300 }} />
-          </div>
-        </>
-      )}
-
-      {/* 创建账本模态框 */}
-      <Modal
-        title="创建新账本"
-        open={isCreateBookModalVisible}
-        onCancel={() => setIsCreateBookModalVisible(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <BookForm 
-          onSuccess={handleCreateBookSuccess}
-          onCancel={() => setIsCreateBookModalVisible(false)}
-        />
-      </Modal>
+                        <div>
+                          <div className="account-name">{account.name}</div>
+                          <span className="account-currency">{currency?.code || ''}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="account-balance">
+                          {currency?.symbol || ''} {currentBalance.toFixed(2)}
+                        </div>
+                        {currency && defaultCurrency && currency.code !== currentBook.defaultCurrency && (
+                          <div className="account-balance-secondary">
+                            ≈ {defaultCurrency?.symbol || ''} {(currentBalance / (currency.rate || 1)).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <Empty 
+                  description={<FormattedMessage id="account.empty" defaultMessage="No accounts yet" />} 
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  style={{ margin: '24px 0' }}
+                />
+              )}
+            </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

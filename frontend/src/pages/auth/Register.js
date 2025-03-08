@@ -22,7 +22,7 @@ const Register = () => {
   useEffect(() => {
     // 如果已经登录，重定向到首页
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/home');
     }
 
     // 显示错误信息
@@ -49,7 +49,8 @@ const Register = () => {
       console.log('注册响应:', response);
       
       messageApi.success('注册成功！正在跳转到首页...');
-      navigate('/');
+      // 使用window.location.href强制重定向到新的首页
+      window.location.href = '/home';
     } catch (error) {
       console.error('注册错误:', error);
       // 显示错误消息

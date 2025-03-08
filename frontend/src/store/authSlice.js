@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { setAuthToken } from '../utils/auth';
 import api from '../services/api';
+import { setUserId } from './settingsSlice';
 
 // 加载用户
-export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWithValue }) => {
+export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWithValue, dispatch }) => {
   const token = localStorage.getItem('token');
   if (token) {
     setAuthToken(token);
@@ -11,6 +12,10 @@ export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWith
 
   try {
     const res = await api.get('/users/me');
+    // 设置用户ID用于关联设置
+    if (res.data.data && res.data.data._id) {
+      dispatch(setUserId(res.data.data._id));
+    }
     return res.data.data;
   } catch (err) {
     localStorage.removeItem('token');
@@ -21,7 +26,7 @@ export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWith
 // 注册用户
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue, dispatch }) => {
     try {
       // 确保邮箱地址转换为小写
       const processedData = {
@@ -32,6 +37,12 @@ export const register = createAsyncThunk(
       console.log('注册数据:', processedData);
       const res = await api.post('/users/register', processedData);
       localStorage.setItem('token', res.data.token);
+      
+      // 如果响应中包含用户ID，设置用户ID用于关联设置
+      if (res.data.user && res.data.user._id) {
+        dispatch(setUserId(res.data.user._id));
+      }
+      
       return res.data;
     } catch (err) {
       console.error('注册错误:', err);
@@ -43,7 +54,7 @@ export const register = createAsyncThunk(
 // 登录用户
 export const login = createAsyncThunk(
   'auth/login',
-  async (userData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue, dispatch }) => {
     try {
       // 确保邮箱地址转换为小写
       const processedData = {
@@ -53,6 +64,12 @@ export const login = createAsyncThunk(
       
       const res = await api.post('/users/login', processedData);
       localStorage.setItem('token', res.data.token);
+      
+      // 如果响应中包含用户ID，设置用户ID用于关联设置
+      if (res.data.user && res.data.user._id) {
+        dispatch(setUserId(res.data.user._id));
+      }
+      
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || '登录失败，请检查您的凭据');
@@ -120,6 +137,21 @@ export const updatePassword = createAsyncThunk(
   }
 );
 
+// 登出用户
+export const logoutUser = createAsyncThunk(
+  'auth/logoutUser',
+  async (_, { dispatch }) => {
+    // 清除本地存储中的token
+    localStorage.removeItem('token');
+    // 清除用户ID
+    localStorage.removeItem('userId');
+    // 调用logout action
+    dispatch(logout());
+    // 返回成功
+    return { success: true };
+  }
+);
+
 const initialState = {
   token: localStorage.getItem('token'),
   isAuthenticated: false,
@@ -134,6 +166,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
       state.token = null;
       state.isAuthenticated = false;
       state.loading = false;

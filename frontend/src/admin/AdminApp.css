@@ -1,0 +1,171 @@
+/* 管理系统全局样式 */
+.admin-layout {
+  min-height: 100vh;
+}
+
+.admin-site-layout {
+  padding: 0;
+  background: var(--bg-color);
+}
+
+.admin-content {
+  padding: 24px;
+  margin: 0;
+  min-height: calc(100vh - 64px);
+  background: var(--bg-color);
+}
+
+/* 管理系统头部样式 */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: var(--header-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  position: sticky;
+  top: 0;
+}
+
+.admin-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.admin-logo {
+  display: flex;
+  align-items: center;
+  margin-right: 48px;
+}
+
+.admin-logo h1 {
+  color: var(--header-text-color);
+  font-size: 18px;
+  margin: 0 0 0 12px;
+  font-weight: 600;
+}
+
+.admin-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.admin-header-right .ant-btn {
+  margin-left: 8px;
+}
+
+/* 管理系统侧边栏样式 */
+.admin-sidebar {
+  background: var(--sidebar-bg);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  z-index: 999;
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
+  left: 0;
+  overflow-y: auto;
+}
+
+/* 管理系统卡片样式 */
+.admin-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--card-bg);
+}
+
+.admin-card .ant-card-head {
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 24px;
+}
+
+.admin-card .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.admin-card .ant-card-body {
+  padding: 24px;
+}
+
+/* 管理系统表格样式 */
+.admin-table {
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-table .ant-table-thead > tr > th {
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.admin-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table .ant-table-tbody > tr:hover > td {
+  background: rgba(24, 144, 255, 0.05);
+}
+
+/* 管理系统表单样式 */
+.admin-form-item {
+  margin-bottom: 24px;
+}
+
+.admin-form-item-label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+/* 管理系统统计卡片样式 */
+.admin-stat-card {
+  height: 100%;
+}
+
+.admin-stat-card .ant-statistic-title {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.admin-stat-card .ant-statistic-content {
+  color: var(--text-color);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.admin-stat-card .ant-statistic-content-value {
+  display: flex;
+  align-items: center;
+}
+
+.admin-stat-card .ant-statistic-content-prefix {
+  margin-right: 8px;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 0 16px;
+  }
+  
+  .admin-logo h1 {
+    display: none;
+  }
+  
+  .admin-content {
+    padding: 16px;
+  }
+  
+  .admin-card .ant-card-head {
+    padding: 0 16px;
+  }
+  
+  .admin-card .ant-card-body {
+    padding: 16px;
+  }
+} 

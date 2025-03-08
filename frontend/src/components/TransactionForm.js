@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,7 +20,7 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const intl = useIntl();
-  const { loading, error } = useSelector((state) => state.transactions);
+  const { error } = useSelector((state) => state.transactions);
   const { currentBook } = useSelector((state) => state.books);
   const { accounts } = useSelector((state) => state.accounts);
   const { categories } = useSelector((state) => state.categories);
@@ -192,23 +193,23 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
     >
       <Form.Item
         name="type"
-        label="交易类型"
-        rules={[{ required: true, message: '请选择交易类型' }]}
+        label={<FormattedMessage id="transaction.type" defaultMessage="交易类型" />}
+        rules={[{ required: true, message: intl.formatMessage({ id: 'transaction.typeRequired', defaultMessage: '请选择交易类型' }) }]}
       >
         <Select onChange={handleTypeChange}>
-          <Option value="income">收入</Option>
-          <Option value="expense">支出</Option>
-          <Option value="transfer">借支</Option>
+          <Option value="income"><FormattedMessage id="transaction.income" defaultMessage="收入" /></Option>
+          <Option value="expense"><FormattedMessage id="transaction.expense" defaultMessage="支出" /></Option>
+          <Option value="transfer"><FormattedMessage id="transaction.transfer" defaultMessage="借支" /></Option>
         </Select>
       </Form.Item>
 
       <Form.Item
         name="accountId"
-        label="账户"
-        rules={[{ required: true, message: '请选择账户' }]}
+        label={<FormattedMessage id="transaction.account" defaultMessage="账户" />}
+        rules={[{ required: true, message: intl.formatMessage({ id: 'transaction.accountRequired', defaultMessage: '请选择账户' }) }]}
       >
         <Select 
-          placeholder="请选择账户" 
+          placeholder={intl.formatMessage({ id: 'transaction.selectAccount', defaultMessage: '请选择账户' })}
           onChange={handleAccountChange}
           optionLabelProp="label"
         >
@@ -238,7 +239,7 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
         name="amount"
         label={
           <span>
-            金额
+            <FormattedMessage id="transaction.amount" defaultMessage="金额" />
             {currencyInfo && (
               <Text type="secondary" style={{ marginLeft: 8 }}>
                 ({currencyInfo.symbol} {currencyInfo.code})
@@ -247,9 +248,9 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
           </span>
         }
         rules={[
-          { required: true, message: '请输入金额' },
-          { type: 'number', min: 0.01, message: '金额必须大于0' },
-          { type: 'number', max: 9999999.99, message: '金额不能超过9,999,999.99' }
+          { required: true, message: intl.formatMessage({ id: 'transaction.amountRequired', defaultMessage: '请输入金额' }) },
+          { type: 'number', min: 0.01, message: intl.formatMessage({ id: 'transaction.amountMin', defaultMessage: '金额必须大于0' }) },
+          { type: 'number', max: 9999999.99, message: intl.formatMessage({ id: 'transaction.amountMax', defaultMessage: '金额不能超过9,999,999.99' }) }
         ]}
       >
         <InputNumber
@@ -258,17 +259,17 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
           min={0.01}
           max={9999999.99}
           step={10}
-          placeholder="请输入金额"
+          placeholder={intl.formatMessage({ id: 'transaction.enterAmount', defaultMessage: '请输入金额' })}
           addonAfter={currencyInfo?.symbol}
         />
       </Form.Item>
 
       <Form.Item
         name="categoryId"
-        label="类别"
-        rules={[{ required: true, message: '请选择类别' }]}
+        label={<FormattedMessage id="transaction.category" defaultMessage="类别" />}
+        rules={[{ required: true, message: intl.formatMessage({ id: 'transaction.categoryRequired', defaultMessage: '请选择类别' }) }]}
       >
-        <Select placeholder="请选择类别">
+        <Select placeholder={intl.formatMessage({ id: 'transaction.selectCategory', defaultMessage: '请选择类别' })}>
           {filteredCategories.map(category => (
             <Option key={category._id} value={category._id}>
               {category.name}
@@ -279,8 +280,8 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
 
       <Form.Item
         name="date"
-        label="日期"
-        rules={[{ required: true, message: '请选择日期' }]}
+        label={<FormattedMessage id="transaction.date" defaultMessage="日期" />}
+        rules={[{ required: true, message: intl.formatMessage({ id: 'transaction.dateRequired', defaultMessage: '请选择日期' }) }]}
       >
         <DatePicker 
           style={{ width: '100%' }} 
@@ -291,21 +292,21 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
 
       <Form.Item
         name="description"
-        label="描述"
+        label={<FormattedMessage id="transaction.description" defaultMessage="描述" />}
       >
         <TextArea
-          placeholder="请输入描述"
+          placeholder={intl.formatMessage({ id: 'transaction.enterDescription', defaultMessage: '请输入描述' })}
           autoSize={{ minRows: 2, maxRows: 6 }}
         />
       </Form.Item>
 
       <Form.Item
         name="personIds"
-        label="相关人员"
+        label={<FormattedMessage id="transaction.person" defaultMessage="人员机构" />}
       >
         <Select 
           mode="multiple" 
-          placeholder="请选择相关人员"
+          placeholder={intl.formatMessage({ id: 'transaction.selectPerson', defaultMessage: '请选择人员机构' })}
           allowClear
         >
           {persons.map(person => (
@@ -318,11 +319,11 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
 
       <Form.Item
         name="tagIds"
-        label="标签"
+        label={<FormattedMessage id="transaction.tag" defaultMessage="标签" />}
       >
         <Select 
           mode="multiple" 
-          placeholder="请选择标签"
+          placeholder={intl.formatMessage({ id: 'transaction.selectTag', defaultMessage: '请选择标签' })}
           allowClear
         >
           {tags.map(tag => (
@@ -340,11 +341,14 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
           loading={submitting} 
           style={{ marginRight: 8 }}
         >
-          {transaction ? '更新交易记录' : '创建交易记录'}
+          {transaction ? 
+            <FormattedMessage id="transaction.updateTransaction" defaultMessage="更新交易记录" /> : 
+            <FormattedMessage id="transaction.createTransaction" defaultMessage="创建交易记录" />
+          }
         </Button>
         {onCancel && (
           <Button onClick={onCancel} disabled={submitting}>
-            取消
+            <FormattedMessage id="common.cancel" defaultMessage="取消" />
           </Button>
         )}
       </Form.Item>

@@ -40,7 +40,6 @@ import { setLanguage, setTheme } from '../store/settingsSlice';
 import { updateUser, updatePassword, loadUser } from '../store/authSlice';
 import ImgCrop from 'antd-img-crop';
 
-const { TabPane } = Tabs;
 const { Option } = Select;
 const { Text } = Typography;
 
@@ -69,6 +68,11 @@ const Settings = () => {
   const searchParams = new URLSearchParams(location.search);
   const tabFromUrl = searchParams.get('tab');
 
+  // 获取用户特定的localStorage键
+  const getUserCurrencyKey = () => {
+    return user && user._id ? `availableCurrencies_${user._id}` : 'availableCurrencies';
+  };
+
   // 模拟货币数据
   const [currencies, setCurrencies] = useState([
     { code: 'CNY', name: '人民币', symbol: '¥', rate: 1, isSystemDefault: true },
@@ -81,30 +85,87 @@ const Settings = () => {
 
   // 初始化时标记系统默认货币
   useEffect(() => {
-    setCurrencies(prev => 
-      prev.map(c => ({
-        ...c,
-        isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(c.code)
-      }))
-    );
-    
-    // 保存货币列表到本地存储
+    // 尝试从用户特定的localStorage获取货币数据
     try {
-      localStorage.setItem('availableCurrencies', JSON.stringify(currencies));
+      if (user && user._id) {
+        const userCurrencyKey = getUserCurrencyKey();
+        const savedCurrencies = localStorage.getItem(userCurrencyKey);
+        
+        if (savedCurrencies) {
+          // 如果有保存的数据，使用它
+          const parsedCurrencies = JSON.parse(savedCurrencies);
+          setCurrencies(parsedCurrencies);
+        } else {
+          // 如果没有保存的数据，检查是否有全局设置可以迁移
+          const globalCurrencies = localStorage.getItem('availableCurrencies');
+          if (globalCurrencies) {
+            try {
+              const parsedGlobalCurrencies = JSON.parse(globalCurrencies);
+              if (parsedGlobalCurrencies && parsedGlobalCurrencies.length > 0) {
+                // 迁移全局设置到用户特定设置
+                setCurrencies(parsedGlobalCurrencies);
+                localStorage.setItem(userCurrencyKey, globalCurrencies);
+              } else {
+                // 如果全局设置为空，使用默认值并标记系统默认货币
+                setCurrencies(prev => 
+                  prev.map(c => ({
+                    ...c,
+                    isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(c.code)
+                  }))
+                );
+                
+                // 保存到用户特定的localStorage
+                localStorage.setItem(userCurrencyKey, JSON.stringify(currencies));
+              }
+            } catch (e) {
+              console.error('解析全局货币设置失败:', e);
+              // 使用默认值
+              setCurrencies(prev => 
+                prev.map(c => ({
+                  ...c,
+                  isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(c.code)
+                }))
+              );
+              localStorage.setItem(userCurrencyKey, JSON.stringify(currencies));
+            }
+          } else {
+            // 如果没有全局设置，使用默认值并标记系统默认货币
+            setCurrencies(prev => 
+              prev.map(c => ({
+                ...c,
+                isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(c.code)
+              }))
+            );
+            
+            // 保存到用户特定的localStorage
+            localStorage.setItem(userCurrencyKey, JSON.stringify(currencies));
+          }
+        }
+      }
     } catch (error) {
-      console.error('保存货币列表失败:', error);
+      console.error('加载/保存货币列表失败:', error);
+      // 标记系统默认货币
+      setCurrencies(prev => 
+        prev.map(c => ({
+          ...c,
+          isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(c.code)
+        }))
+      );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
   
   // 当货币列表变化时，更新本地存储
   useEffect(() => {
     try {
-      localStorage.setItem('availableCurrencies', JSON.stringify(currencies));
+      if (user && user._id) {
+        const userCurrencyKey = getUserCurrencyKey();
+        localStorage.setItem(userCurrencyKey, JSON.stringify(currencies));
+      }
     } catch (error) {
       console.error('保存货币列表失败:', error);
     }
-  }, [currencies]);
+  }, [currencies, user]);
 
   // 设置个人资料表单的初始值
   useEffect(() => {
@@ -188,19 +249,36 @@ const Settings = () => {
     currencyForm.validateFields().then(values => {
       if (editingCurrency) {
         // 编辑现有货币
-        setCurrencies(prev => 
-          prev.map(c => c.code === editingCurrency.code ? { 
+        const updatedCurrencies = currencies.map(c => 
+          c.code === editingCurrency.code ? { 
             ...values, 
             isSystemDefault: editingCurrency.isSystemDefault 
-          } : c)
+          } : c
         );
+        setCurrencies(updatedCurrencies);
+        
+        // 保存到用户特定的localStorage
+        if (user && user._id) {
+          const userCurrencyKey = getUserCurrencyKey();
+          localStorage.setItem(userCurrencyKey, JSON.stringify(updatedCurrencies));
+        }
+        
         message.success('货币更新成功');
       } else {
         // 添加新货币
-        setCurrencies(prev => [...prev, { 
+        const newCurrency = { 
           ...values, 
           isSystemDefault: DEFAULT_SYSTEM_CURRENCIES.includes(values.code) 
-        }]);
+        };
+        const newCurrencies = [...currencies, newCurrency];
+        setCurrencies(newCurrencies);
+        
+        // 保存到用户特定的localStorage
+        if (user && user._id) {
+          const userCurrencyKey = getUserCurrencyKey();
+          localStorage.setItem(userCurrencyKey, JSON.stringify(newCurrencies));
+        }
+        
         message.success('货币添加成功');
       }
       setIsModalVisible(false);
@@ -209,7 +287,15 @@ const Settings = () => {
 
   // 处理删除货币
   const handleDelete = (code) => {
-    setCurrencies(prev => prev.filter(c => c.code !== code));
+    const updatedCurrencies = currencies.filter(c => c.code !== code);
+    setCurrencies(updatedCurrencies);
+    
+    // 保存到用户特定的localStorage
+    if (user && user._id) {
+      const userCurrencyKey = getUserCurrencyKey();
+      localStorage.setItem(userCurrencyKey, JSON.stringify(updatedCurrencies));
+    }
+    
     message.success('货币删除成功');
   };
 
@@ -302,390 +388,400 @@ const Settings = () => {
         title={<FormattedMessage id="nav.settings" defaultMessage="设置" />}
         className="settings-card"
       >
-        <Tabs defaultActiveKey={tabFromUrl || "general"}>
-          <TabPane 
-            tab={
-              <span>
-                <UserOutlined />
-                <FormattedMessage id="settings.general" defaultMessage="通用设置" />
-              </span>
-            } 
-            key="general"
-          >
-            <Form layout="vertical" initialValues={{ language, theme }}>
-              <Form.Item 
-                label={<FormattedMessage id="settings.language" defaultMessage="语言设置" />}
-                name="language"
-              >
-                <Select 
-                  onChange={handleLanguageChange}
-                  style={{ width: 200 }}
-                >
-                  <Option value="zh-CN">中文</Option>
-                  <Option value="en-US">English</Option>
-                </Select>
-              </Form.Item>
-              
-              <Form.Item 
-                label={<FormattedMessage id="settings.theme" defaultMessage="主题设置" />}
-                name="theme"
-              >
-                <Radio.Group 
-                  onChange={e => handleThemeChange(e.target.value)}
-                >
-                  <Radio.Button value="light">
-                    <FormattedMessage id="settings.theme.light" defaultMessage="浅色" />
-                  </Radio.Button>
-                  <Radio.Button value="dark">
-                    <FormattedMessage id="settings.theme.dark" defaultMessage="深色" />
-                  </Radio.Button>
-                </Radio.Group>
-              </Form.Item>
-            </Form>
-          </TabPane>
-          
-          <TabPane 
-            tab={
-              <span>
-                <DollarOutlined />
-                <FormattedMessage id="settings.currency" defaultMessage="货币设置" />
-              </span>
-            } 
-            key="currency"
-          >
-            <div style={{ marginBottom: 16 }}>
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />} 
-                onClick={() => showModal()}
-              >
-                添加货币
-              </Button>
-            </div>
-            <Table 
-              columns={columns} 
-              dataSource={currencies} 
-              rowKey="code" 
-              pagination={false}
-            />
-            <div style={{ marginTop: 16 }}>
-              <p style={{ color: '#999' }}>
-                <QuestionCircleOutlined style={{ marginRight: 4 }} />
-                说明：
-              </p>
-              <ul style={{ color: '#999', paddingLeft: 24 }}>
-                <li>系统默认货币（人民币、美元、泰铢）不可删除</li>
-                <li>正在被账本使用的货币不可删除</li>
-                <li>新建账本时，本位币可从此处添加的货币中选择</li>
-              </ul>
-            </div>
-          </TabPane>
-          
-          <TabPane 
-            tab={
-              <span>
-                <LockOutlined />
-                <FormattedMessage id="settings.account" defaultMessage="账号设置" />
-              </span>
-            } 
-            key="account"
-          >
-            {/* 用户基本信息表单 */}
-            <div style={{ marginBottom: 24 }}>
-              <h3><FormattedMessage id="settings.profile" defaultMessage="个人资料" /></h3>
-              <Form 
-                form={profileForm}
-                layout="vertical" 
-                initialValues={{ 
-                  name: user?.username || '',
-                  email: user?.email || '',
-                  avatar: user?.avatar || ''
-                }}
-                onFinish={handleProfileSubmit}
-              >
-                <Form.Item
-                  name="avatar"
-                  label={<FormattedMessage id="settings.avatar" defaultMessage="头像" />}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar 
-                      size={100} 
-                      icon={<UserOutlined />} 
-                      src={imageUrl || (user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${user.avatar}`) : null)}
-                      style={{ marginBottom: 16 }}
-                    />
-                    <ImgCrop rotate shape="round" grid>
-                      <Upload
-                        name="avatar"
-                        className="avatar-uploader"
-                        showUploadList={false}
-                        action={`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/upload`}
-                        headers={{
-                          Authorization: `Bearer ${localStorage.getItem('token')}`
-                        }}
-                        beforeUpload={(file) => {
-                          const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-                          if (!isJpgOrPng) {
-                            message.error('只能上传JPG/PNG格式的图片!');
-                          }
-                          const isLt2M = file.size / 1024 / 1024 < 2;
-                          if (!isLt2M) {
-                            message.error('图片必须小于2MB!');
-                          }
-                          setUploading(true);
-                          return isJpgOrPng && isLt2M;
-                        }}
-                        onChange={(info) => {
-                          if (info.file.status === 'uploading') {
-                            setUploading(true);
-                            return;
-                          }
-                          if (info.file.status === 'done') {
-                            setUploading(false);
-                            message.success('头像上传成功!');
-                            // 获取服务器返回的图片URL
-                            const avatarUrl = info.file.response.url;
-                            // 修复URL路径，移除多余的/api前缀
-                            const fullAvatarUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${avatarUrl}`.replace('/api/uploads', '/uploads');
-                            console.log('上传成功，返回数据:', info.file.response);
-                            console.log('完整头像URL:', fullAvatarUrl);
-                            // 更新表单值和预览图
-                            setImageUrl(fullAvatarUrl);
-                            profileForm.setFieldsValue({ avatar: fullAvatarUrl });
-                            
-                            // 立即更新用户头像
-                            dispatch(updateUser({
-                              username: user.username,
-                              email: user.email,
-                              avatar: fullAvatarUrl
-                            })).then(() => {
-                              // 重新加载用户信息以更新头像
-                              dispatch(loadUser());
-                            });
-                          } else if (info.file.status === 'error') {
-                            setUploading(false);
-                            console.error('上传失败:', info.file.error, info.file.response);
-                            message.error(`头像上传失败: ${info.file.response?.message || '服务器错误'}`);
-                          }
-                        }}
-                        customRequest={({ file, onSuccess, onError, onProgress }) => {
-                          // 创建FormData对象
-                          const formData = new FormData();
-                          formData.append('avatar', file);
-                          
-                          // 使用axios直接上传
-                          const xhr = new XMLHttpRequest();
-                          xhr.open('POST', `${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/upload`, true);
-                          xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
-                          
-                          // 进度事件
-                          xhr.upload.onprogress = (e) => {
-                            if (e.lengthComputable) {
-                              const percent = Math.round((e.loaded / e.total) * 100);
-                              onProgress({ percent });
-                            }
-                          };
-                          
-                          // 完成事件
-                          xhr.onload = () => {
-                            if (xhr.status === 200) {
-                              const response = JSON.parse(xhr.responseText);
-                              onSuccess(response, xhr);
-                            } else {
-                              onError({ status: xhr.status });
-                            }
-                          };
-                          
-                          // 错误事件
-                          xhr.onerror = () => {
-                            onError({ status: xhr.status });
-                          };
-                          
-                          // 发送请求
-                          xhr.send(formData);
-                          
-                          // 返回上传取消函数
-                          return {
-                            abort() {
-                              xhr.abort();
-                            }
-                          };
-                        }}
-                      >
-                        <Button 
-                          icon={uploading ? <LoadingOutlined /> : <UploadOutlined />}
-                          style={{ marginTop: 8 }}
-                          disabled={uploading}
-                        >
-                          {uploading ? 
-                            <FormattedMessage id="common.uploading" defaultMessage="上传中..." /> : 
-                            <FormattedMessage id="settings.uploadAvatar" defaultMessage="上传头像" />
-                          }
-                        </Button>
-                      </Upload>
-                    </ImgCrop>
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary" style={{ fontSize: '12px', textAlign: 'center', display: 'block' }}>
-                        <FormattedMessage id="settings.avatarHint" defaultMessage="支持JPG、PNG格式，文件小于2MB" />
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: '12px', textAlign: 'center', display: 'block', marginTop: '4px' }}>
-                        <FormattedMessage id="settings.avatarCropHint" defaultMessage="可拖动调整裁剪区域" />
-                      </Text>
-                    </div>
+        <Tabs 
+          defaultActiveKey={tabFromUrl || "general"}
+          items={[
+            {
+              key: "general",
+              label: (
+                <span>
+                  <UserOutlined />
+                  <FormattedMessage id="settings.general" defaultMessage="通用设置" />
+                </span>
+              ),
+              children: (
+                <Form layout="vertical" initialValues={{ language, theme }}>
+                  <Form.Item 
+                    label={<FormattedMessage id="settings.language" defaultMessage="语言设置" />}
+                    name="language"
+                  >
+                    <Select 
+                      onChange={handleLanguageChange}
+                      style={{ width: 200 }}
+                    >
+                      <Option value="zh-CN">中文</Option>
+                      <Option value="en-US">English</Option>
+                    </Select>
+                  </Form.Item>
+                  
+                  <Form.Item 
+                    label={<FormattedMessage id="settings.theme" defaultMessage="主题设置" />}
+                    name="theme"
+                  >
+                    <Radio.Group 
+                      onChange={e => handleThemeChange(e.target.value)}
+                    >
+                      <Radio.Button value="light">
+                        <FormattedMessage id="settings.theme.light" defaultMessage="浅色" />
+                      </Radio.Button>
+                      <Radio.Button value="dark">
+                        <FormattedMessage id="settings.theme.dark" defaultMessage="深色" />
+                      </Radio.Button>
+                    </Radio.Group>
+                  </Form.Item>
+                </Form>
+              )
+            },
+            {
+              key: "currency",
+              label: (
+                <span>
+                  <DollarOutlined />
+                  <FormattedMessage id="settings.currency" defaultMessage="货币设置" />
+                </span>
+              ),
+              children: (
+                <>
+                  <div style={{ marginBottom: 16 }}>
+                    <Button 
+                      type="primary" 
+                      icon={<PlusOutlined />} 
+                      onClick={() => showModal()}
+                    >
+                      添加货币
+                    </Button>
                   </div>
-                </Form.Item>
+                  <Table 
+                    columns={columns} 
+                    dataSource={currencies} 
+                    rowKey="code" 
+                    pagination={false}
+                  />
+                  <div style={{ marginTop: 16 }}>
+                    <p style={{ color: '#999' }}>
+                      <QuestionCircleOutlined style={{ marginRight: 4 }} />
+                      说明：
+                    </p>
+                    <ul style={{ color: '#999', paddingLeft: 24 }}>
+                      <li>系统默认货币（人民币、美元、泰铢）不可删除</li>
+                      <li>正在被账本使用的货币不可删除</li>
+                      <li>新建账本时，本位币可从此处添加的货币中选择</li>
+                    </ul>
+                  </div>
+                </>
+              )
+            },
+            {
+              key: "account",
+              label: (
+                <span>
+                  <LockOutlined />
+                  <FormattedMessage id="settings.account" defaultMessage="账号设置" />
+                </span>
+              ),
+              children: (
+                <>
+                  {/* 用户基本信息表单 */}
+                  <div style={{ marginBottom: 24 }}>
+                    <h3><FormattedMessage id="settings.profile" defaultMessage="个人资料" /></h3>
+                    <Form 
+                      form={profileForm}
+                      layout="vertical" 
+                      initialValues={{ 
+                        name: user?.username || '',
+                        email: user?.email || '',
+                        avatar: user?.avatar || ''
+                      }}
+                      onFinish={handleProfileSubmit}
+                    >
+                      <Form.Item
+                        name="avatar"
+                        label={<FormattedMessage id="settings.avatar" defaultMessage="头像" />}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar 
+                            size={100} 
+                            icon={<UserOutlined />} 
+                            src={imageUrl || (user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${user.avatar}`) : null)}
+                            style={{ marginBottom: 16 }}
+                          />
+                          <ImgCrop rotate shape="round" grid>
+                            <Upload
+                              name="avatar"
+                              className="avatar-uploader"
+                              showUploadList={false}
+                              action={`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/upload`}
+                              headers={{
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                              }}
+                              beforeUpload={(file) => {
+                                const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+                                if (!isJpgOrPng) {
+                                  message.error('只能上传JPG/PNG格式的图片!');
+                                }
+                                const isLt2M = file.size / 1024 / 1024 < 2;
+                                if (!isLt2M) {
+                                  message.error('图片必须小于2MB!');
+                                }
+                                setUploading(true);
+                                return isJpgOrPng && isLt2M;
+                              }}
+                              onChange={(info) => {
+                                if (info.file.status === 'uploading') {
+                                  setUploading(true);
+                                  return;
+                                }
+                                if (info.file.status === 'done') {
+                                  setUploading(false);
+                                  message.success('头像上传成功!');
+                                  // 获取服务器返回的图片URL
+                                  const avatarUrl = info.file.response.url;
+                                  // 修复URL路径，移除多余的/api前缀
+                                  const fullAvatarUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${avatarUrl}`.replace('/api/uploads', '/uploads');
+                                  console.log('上传成功，返回数据:', info.file.response);
+                                  console.log('完整头像URL:', fullAvatarUrl);
+                                  // 更新表单值和预览图
+                                  setImageUrl(fullAvatarUrl);
+                                  profileForm.setFieldsValue({ avatar: fullAvatarUrl });
+                                  
+                                  // 立即更新用户头像
+                                  dispatch(updateUser({
+                                    username: user.username,
+                                    email: user.email,
+                                    avatar: fullAvatarUrl
+                                  })).then(() => {
+                                    // 重新加载用户信息以更新头像
+                                    dispatch(loadUser());
+                                  });
+                                } else if (info.file.status === 'error') {
+                                  setUploading(false);
+                                  console.error('上传失败:', info.file.error, info.file.response);
+                                  message.error(`头像上传失败: ${info.file.response?.message || '服务器错误'}`);
+                                }
+                              }}
+                              customRequest={({ file, onSuccess, onError, onProgress }) => {
+                                // 创建FormData对象
+                                const formData = new FormData();
+                                formData.append('avatar', file);
+                                
+                                // 使用axios直接上传
+                                const xhr = new XMLHttpRequest();
+                                xhr.open('POST', `${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/upload`, true);
+                                xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+                                
+                                // 进度事件
+                                xhr.upload.onprogress = (e) => {
+                                  if (e.lengthComputable) {
+                                    const percent = Math.round((e.loaded / e.total) * 100);
+                                    onProgress({ percent });
+                                  }
+                                };
+                                
+                                // 完成事件
+                                xhr.onload = () => {
+                                  if (xhr.status === 200) {
+                                    const response = JSON.parse(xhr.responseText);
+                                    onSuccess(response, xhr);
+                                  } else {
+                                    onError({ status: xhr.status });
+                                  }
+                                };
+                                
+                                // 错误事件
+                                xhr.onerror = () => {
+                                  onError({ status: xhr.status });
+                                };
+                                
+                                // 发送请求
+                                xhr.send(formData);
+                                
+                                // 返回上传取消函数
+                                return {
+                                  abort() {
+                                    xhr.abort();
+                                  }
+                                };
+                              }}
+                            >
+                              <Button 
+                                icon={uploading ? <LoadingOutlined /> : <UploadOutlined />}
+                                style={{ marginTop: 8 }}
+                                disabled={uploading}
+                              >
+                                {uploading ? 
+                                  <FormattedMessage id="common.uploading" defaultMessage="上传中..." /> : 
+                                  <FormattedMessage id="settings.uploadAvatar" defaultMessage="上传头像" />
+                                }
+                              </Button>
+                            </Upload>
+                          </ImgCrop>
+                          <div style={{ marginTop: 8 }}>
+                            <Text type="secondary" style={{ fontSize: '12px', textAlign: 'center', display: 'block' }}>
+                              <FormattedMessage id="settings.avatarHint" defaultMessage="支持JPG、PNG格式，文件小于2MB" />
+                            </Text>
+                            <Text type="secondary" style={{ fontSize: '12px', textAlign: 'center', display: 'block', marginTop: '4px' }}>
+                              <FormattedMessage id="settings.avatarCropHint" defaultMessage="可拖动调整裁剪区域" />
+                            </Text>
+                          </div>
+                        </div>
+                      </Form.Item>
 
-                <Form.Item
-                  name="name"
-                  label={<FormattedMessage id="settings.username" defaultMessage="用户名" />}
-                  rules={[{ required: true, message: '请输入用户名' }]}
-                >
-                  <Input placeholder="请输入用户名" />
-                </Form.Item>
+                      <Form.Item
+                        name="name"
+                        label={<FormattedMessage id="settings.username" defaultMessage="用户名" />}
+                        rules={[{ required: true, message: '请输入用户名' }]}
+                      >
+                        <Input placeholder="请输入用户名" />
+                      </Form.Item>
 
-                <Form.Item
-                  name="email"
-                  label={<FormattedMessage id="settings.email" defaultMessage="邮箱" />}
-                  rules={[
-                    { required: true, message: '请输入邮箱' },
-                    { type: 'email', message: '请输入有效的邮箱地址' }
-                  ]}
-                >
-                  <Input placeholder="请输入邮箱" disabled />
-                </Form.Item>
+                      <Form.Item
+                        name="email"
+                        label={<FormattedMessage id="settings.email" defaultMessage="邮箱" />}
+                        rules={[
+                          { required: true, message: '请输入邮箱' },
+                          { type: 'email', message: '请输入有效的邮箱地址' }
+                        ]}
+                      >
+                        <Input placeholder="请输入邮箱" disabled />
+                      </Form.Item>
 
-                <Form.Item>
-                  <Button type="primary" htmlType="submit">
-                    <FormattedMessage id="common.save" defaultMessage="保存" />
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
+                      <Form.Item>
+                        <Button type="primary" htmlType="submit">
+                          <FormattedMessage id="common.save" defaultMessage="保存" />
+                        </Button>
+                      </Form.Item>
+                    </Form>
+                  </div>
 
-            <Divider />
+                  <Divider />
 
-            {/* 密码修改表单 */}
-            <h3><FormattedMessage id="settings.changePassword" defaultMessage="修改密码" /></h3>
-            <Form 
-              form={passwordForm}
-              layout="vertical" 
-              onFinish={(values) => {
-                dispatch(updatePassword({
-                  currentPassword: values.oldPassword,
-                  newPassword: values.newPassword
-                }))
-                  .unwrap()
-                  .then(() => {
-                    message.success(intl.formatMessage({ 
-                      id: 'settings.password.success', 
-                      defaultMessage: '密码修改成功' 
-                    }));
-                    passwordForm.resetFields();
-                  })
-                  .catch((error) => {
-                    message.error(error || intl.formatMessage({ 
-                      id: 'settings.password.error', 
-                      defaultMessage: '密码修改失败' 
-                    }));
-                  });
-              }}
-            >
-              <Form.Item 
-                name="oldPassword" 
-                label={<FormattedMessage id="settings.oldPassword" defaultMessage="旧密码" />}
-                rules={[{ required: true, message: '请输入旧密码' }]}
-              >
-                <Input.Password />
-              </Form.Item>
-              
-              <Form.Item 
-                name="newPassword" 
-                label={<FormattedMessage id="settings.newPassword" defaultMessage="新密码" />}
-                rules={[{ required: true, message: '请输入新密码' }]}
-              >
-                <Input.Password />
-              </Form.Item>
-              
-              <Form.Item 
-                name="confirmPassword" 
-                label={<FormattedMessage id="settings.confirmPassword" defaultMessage="确认新密码" />}
-                rules={[
-                  { required: true, message: '请确认新密码' },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue('newPassword') === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error('两次输入的密码不一致'));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password />
-              </Form.Item>
-              
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  <FormattedMessage id="common.save" defaultMessage="保存" />
-                </Button>
-              </Form.Item>
-            </Form>
-          </TabPane>
-          
-          <TabPane 
-            tab={
-              <span>
-                <BellOutlined />
-                <FormattedMessage id="settings.notification" defaultMessage="通知设置" />
-              </span>
-            } 
-            key="notification"
-          >
-            <Form layout="vertical">
-              <Form.Item 
-                label={<FormattedMessage id="settings.notification.email" defaultMessage="邮件通知" />}
-                name="emailNotification"
-              >
-                <Switch defaultChecked />
-              </Form.Item>
-              
-              <Form.Item 
-                label={<FormattedMessage id="settings.notification.app" defaultMessage="应用内通知" />}
-                name="appNotification"
-              >
-                <Switch defaultChecked />
-              </Form.Item>
-            </Form>
-          </TabPane>
-          
-          <TabPane 
-            tab={
-              <span>
-                <CloudUploadOutlined />
-                <FormattedMessage id="settings.backup" defaultMessage="备份设置" />
-              </span>
-            } 
-            key="backup"
-          >
-            <div className="backup-actions">
-              <Button type="primary" style={{ marginRight: 16 }}>
-                <FormattedMessage id="backup.create" defaultMessage="创建备份" />
-              </Button>
-              <Button>
-                <FormattedMessage id="backup.restore" defaultMessage="恢复备份" />
-              </Button>
-            </div>
-            <Divider />
-            <div className="export-actions">
-              <Button type="primary" style={{ marginRight: 16 }}>
-                <FormattedMessage id="backup.export" defaultMessage="导出数据" />
-              </Button>
-              <Button>
-                <FormattedMessage id="backup.import" defaultMessage="导入数据" />
-              </Button>
-            </div>
-          </TabPane>
-        </Tabs>
+                  {/* 密码修改表单 */}
+                  <h3><FormattedMessage id="settings.changePassword" defaultMessage="修改密码" /></h3>
+                  <Form 
+                    form={passwordForm}
+                    layout="vertical" 
+                    onFinish={(values) => {
+                      dispatch(updatePassword({
+                        currentPassword: values.oldPassword,
+                        newPassword: values.newPassword
+                      }))
+                        .unwrap()
+                        .then(() => {
+                          message.success(intl.formatMessage({ 
+                            id: 'settings.password.success', 
+                            defaultMessage: '密码修改成功' 
+                          }));
+                          passwordForm.resetFields();
+                        })
+                        .catch((error) => {
+                          message.error(error || intl.formatMessage({ 
+                            id: 'settings.password.error', 
+                            defaultMessage: '密码修改失败' 
+                          }));
+                        });
+                    }}
+                  >
+                    <Form.Item 
+                      name="oldPassword" 
+                      label={<FormattedMessage id="settings.oldPassword" defaultMessage="旧密码" />}
+                      rules={[{ required: true, message: '请输入旧密码' }]}
+                    >
+                      <Input.Password />
+                    </Form.Item>
+                    
+                    <Form.Item 
+                      name="newPassword" 
+                      label={<FormattedMessage id="settings.newPassword" defaultMessage="新密码" />}
+                      rules={[{ required: true, message: '请输入新密码' }]}
+                    >
+                      <Input.Password />
+                    </Form.Item>
+                    
+                    <Form.Item 
+                      name="confirmPassword" 
+                      label={<FormattedMessage id="settings.confirmPassword" defaultMessage="确认新密码" />}
+                      rules={[
+                        { required: true, message: '请确认新密码' },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue('newPassword') === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(new Error('两次输入的密码不一致'));
+                          },
+                        }),
+                      ]}
+                    >
+                      <Input.Password />
+                    </Form.Item>
+                    
+                    <Form.Item>
+                      <Button type="primary" htmlType="submit">
+                        <FormattedMessage id="common.save" defaultMessage="保存" />
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </>
+              )
+            },
+            {
+              key: "notification",
+              label: (
+                <span>
+                  <BellOutlined />
+                  <FormattedMessage id="settings.notification" defaultMessage="通知设置" />
+                </span>
+              ),
+              children: (
+                <Form layout="vertical">
+                  <Form.Item 
+                    label={<FormattedMessage id="settings.notification.email" defaultMessage="邮件通知" />}
+                    name="emailNotification"
+                  >
+                    <Switch defaultChecked />
+                  </Form.Item>
+                  
+                  <Form.Item 
+                    label={<FormattedMessage id="settings.notification.app" defaultMessage="应用内通知" />}
+                    name="appNotification"
+                  >
+                    <Switch defaultChecked />
+                  </Form.Item>
+                </Form>
+              )
+            },
+            {
+              key: "backup",
+              label: (
+                <span>
+                  <CloudUploadOutlined />
+                  <FormattedMessage id="settings.backup" defaultMessage="备份设置" />
+                </span>
+              ),
+              children: (
+                <>
+                  <div className="backup-actions">
+                    <Button type="primary" style={{ marginRight: 16 }}>
+                      <FormattedMessage id="backup.create" defaultMessage="创建备份" />
+                    </Button>
+                    <Button>
+                      <FormattedMessage id="backup.restore" defaultMessage="恢复备份" />
+                    </Button>
+                  </div>
+                  <Divider />
+                  <div className="export-actions">
+                    <Button type="primary" style={{ marginRight: 16 }}>
+                      <FormattedMessage id="backup.export" defaultMessage="导出数据" />
+                    </Button>
+                    <Button>
+                      <FormattedMessage id="backup.import" defaultMessage="导入数据" />
+                    </Button>
+                  </div>
+                </>
+              )
+            }
+          ]}
+        />
       </Card>
 
       <Modal

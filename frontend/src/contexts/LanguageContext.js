@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
-import zhCN from '../locales/zh-CN';
+import zhCN from '../locales/zh-CN.json';
 import enUS from '../locales/en-US';
 
 // 创建语言上下文

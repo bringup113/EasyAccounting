@@ -3,15 +3,19 @@
   padding: 0;
   margin: 0;
   width: 100%;
+  overflow-x: hidden; /* 防止水平滚动 */
+  box-sizing: border-box; /* 确保padding不会增加元素宽度 */
 }
 
 /* 欢迎页面样式 */
 .welcome-container {
   text-align: center;
-  padding: 50px 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 30px 16px; /* 减小内边距 */
+  background: transparent;
+  min-height: calc(100vh - 64px - 48px);
+  margin: -16px; /* 与main-content的padding匹配 */
+  width: calc(100% + 32px); /* 与main-content的padding匹配 */
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .welcome-title {
@@ -28,12 +32,16 @@
   margin-right: auto;
 }
 
+/* 账本卡片样式 */
 .book-card {
   height: 100%;
   transition: all 0.3s;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  position: relative;
+  margin-bottom: 16px;
+  padding: 16px;
 }
 
 .book-card:hover {
@@ -47,6 +55,7 @@
   margin-bottom: 16px;
 }
 
+/* 创建账本卡片样式 */
 .create-book-card {
   height: 100%;
   display: flex;
@@ -54,9 +63,10 @@
   justify-content: center;
   align-items: center;
   border: 1px dashed #d9d9d9;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s;
-  padding: 24px;
+  padding: 16px;
+  margin-bottom: 16px;
 }
 
 .create-book-card:hover {
@@ -70,13 +80,16 @@
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 0;
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
   overflow: hidden;
+  width: 100%;
 }
 
 /* 日历内容区域样式 */
 .ant-picker-calendar {
-  padding: 0 24px 24px;
+  padding: 0 16px 16px; /* 减小内边距 */
+  width: 100%; /* 确保宽度不超过父容器 */
+  overflow-x: auto; /* 允许横向滚动，避免内容被截断 */
 }
 
 /* 日历头部样式 */
@@ -84,14 +97,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 16px 24px;
+  margin-bottom: 12px; /* 减小底部边距 */
+  padding: 12px 16px; /* 减小内边距 */
   border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap; /* 允许在小屏幕上换行 */
 }
 
 .calendar-header-left {
   display: flex;
   align-items: center;
+  margin-bottom: 8px; /* 在小屏幕上换行时提供间距 */
 }
 
 .calendar-header-left .anticon {
@@ -104,6 +119,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap; /* 允许在小屏幕上换行 */
 }
 
 .year-select,
@@ -186,29 +202,30 @@
 
 /* 统计卡片样式 */
 .stat-card {
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
 }
 
 /* 图表容器样式 */
 .chart-container {
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   padding: 16px;
   margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .chart-title {
   margin: 0 0 16px 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* 账户余额卡片样式 */
 .account-balance-card {
-  margin: 0;
+  margin: 0 0 16px 0;
 }
 
 .account-list-wrapper {
@@ -223,7 +240,8 @@
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
-  transition: all 0.3s ease;
+  cursor: default;
+  pointer-events: none;
 }
 
 .account-item:first-child {
@@ -234,9 +252,6 @@
   border-bottom: none;
 }
 
-.account-item:hover {
-  background-color: #f9f9f9;
-}
 
 .account-info {
   display: flex;
@@ -298,8 +313,44 @@
     align-items: flex-start;
   }
   
-  .calendar-header h2 {
+  .calendar-header-right {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  
+  .ant-picker-calendar-full .ant-picker-panel .ant-picker-calendar-date {
+    padding: 4px 2px; /* 减小日历单元格内边距 */
+  }
+  
+  .calendar-day-content {
+    min-height: 30px; /* 减小日历单元格最小高度 */
+    padding: 2px; /* 减小内边距 */
+  }
+  
+  /* 小屏幕下的卡片样式 */
+  .book-card, 
+  .create-book-card, 
+  .stat-card, 
+  .chart-container, 
+  .account-balance-card {
     margin-bottom: 12px;
+    padding: 12px;
+  }
+  
+  .calendar-container {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .calendar-header-right .ant-space {
+    flex-wrap: wrap;
+    gap: 8px 4px !important;
+  }
+  
+  .ant-radio-group {
+    margin-top: 8px;
   }
 }
 

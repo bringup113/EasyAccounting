@@ -152,12 +152,20 @@ const CurrencySettings = () => {
   const [editingCurrency, setEditingCurrency] = useState(null);
   const [currencies, setCurrencies] = useState([]);
   const intl = useIntl();
+  const { user } = useSelector(state => state.auth);
+
+  // 获取用户特定的localStorage键
+  const getUserCurrencyKey = () => {
+    return user && user._id ? `availableCurrencies_${user._id}` : 'availableCurrencies';
+  };
 
   // 加载货币数据
   useEffect(() => {
     // 尝试从localStorage获取货币数据
     try {
-      const savedCurrencies = localStorage.getItem('availableCurrencies');
+      // 使用用户特定的键
+      const userCurrencyKey = getUserCurrencyKey();
+      const savedCurrencies = localStorage.getItem(userCurrencyKey);
       if (savedCurrencies) {
         setCurrencies(JSON.parse(savedCurrencies));
       } else {
@@ -168,7 +176,23 @@ const CurrencySettings = () => {
           { code: 'THB', name: '泰铢', symbol: '฿', rate: 4.5, isSystemDefault: true }
         ];
         setCurrencies(defaultCurrencies);
-        localStorage.setItem('availableCurrencies', JSON.stringify(defaultCurrencies));
+        localStorage.setItem(userCurrencyKey, JSON.stringify(defaultCurrencies));
+        
+        // 如果有全局设置，迁移到用户特定的设置
+        if (user && user._id) {
+          const globalCurrencies = localStorage.getItem('availableCurrencies');
+          if (globalCurrencies) {
+            try {
+              const parsedGlobalCurrencies = JSON.parse(globalCurrencies);
+              if (parsedGlobalCurrencies && parsedGlobalCurrencies.length > 0) {
+                setCurrencies(parsedGlobalCurrencies);
+                localStorage.setItem(userCurrencyKey, globalCurrencies);
+              }
+            } catch (e) {
+              console.error('解析全局货币设置失败:', e);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('加载货币数据失败:', error);
@@ -180,7 +204,7 @@ const CurrencySettings = () => {
       ];
       setCurrencies(defaultCurrencies);
     }
-  }, []);
+  }, [user]);
 
   // 处理货币添加/编辑
   const handleCurrencySubmit = (values) => {
@@ -190,16 +214,16 @@ const CurrencySettings = () => {
         c.code === editingCurrency.code ? { ...values, rate: values.rate || 1 } : c
       );
       setCurrencies(updatedCurrencies);
-      // 保存到localStorage
-      localStorage.setItem('availableCurrencies', JSON.stringify(updatedCurrencies));
+      // 保存到localStorage，使用用户特定的键
+      localStorage.setItem(getUserCurrencyKey(), JSON.stringify(updatedCurrencies));
       messageApi.success(intl.formatMessage({ id: 'settings.currencyUpdated', defaultMessage: '货币已更新' }));
     } else {
       // 添加新货币
       const newCurrency = { ...values, rate: values.rate || 1, isSystemDefault: false };
       const newCurrencies = [...currencies, newCurrency];
       setCurrencies(newCurrencies);
-      // 保存到localStorage
-      localStorage.setItem('availableCurrencies', JSON.stringify(newCurrencies));
+      // 保存到localStorage，使用用户特定的键
+      localStorage.setItem(getUserCurrencyKey(), JSON.stringify(newCurrencies));
       messageApi.success(intl.formatMessage({ id: 'settings.currencyAdded', defaultMessage: '货币已添加' }));
     }
     setIsModalVisible(false);
@@ -218,8 +242,8 @@ const CurrencySettings = () => {
     
     const updatedCurrencies = currencies.filter(c => c.code !== code);
     setCurrencies(updatedCurrencies);
-    // 保存到localStorage
-    localStorage.setItem('availableCurrencies', JSON.stringify(updatedCurrencies));
+    // 保存到localStorage，使用用户特定的键
+    localStorage.setItem(getUserCurrencyKey(), JSON.stringify(updatedCurrencies));
     messageApi.success(intl.formatMessage({ id: 'settings.currencyDeleted', defaultMessage: '货币已删除' }));
   };
 

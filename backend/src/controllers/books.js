@@ -7,6 +7,14 @@ exports.createBook = async (req, res) => {
   try {
     const { name, description, timezone, defaultCurrency } = req.body;
 
+    // 验证用户ID
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: '未授权，无法创建账本',
+      });
+    }
+
     // 创建账本
     const book = await Book.create({
       name,
@@ -106,16 +114,40 @@ exports.updateBook = async (req, res) => {
       });
     }
 
-    // 检查用户是否是账本的所有者
-    if (book.ownerId.toString() !== req.user.id) {
-      return res.status(403).json({
+    // 检查用户是否是账本的所有者或管理者
+    // 首先检查用户是否是所有者
+    const isOwner = book.ownerId.toString() === req.user.id;
+    
+    // 如果不是所有者，检查用户是否是管理者
+    if (!isOwner) {
+      // 查找用户的权限记录
+      const userPermission = book.memberPermissions?.find(
+        p => p.userId.toString() === req.user.id
+      );
+      
+      // 如果用户不是管理者，拒绝请求
+      if (!userPermission || userPermission.permission !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: '只有账本所有者或管理者可以更新账本信息',
+        });
+      }
+    }
+
+    // 防止修改所有者
+    if (req.body.ownerId && req.body.ownerId !== req.user.id) {
+      return res.status(400).json({
         success: false,
-        message: '只有账本所有者可以更新账本信息',
+        message: '不允许修改账本所有者，请使用转移所有权功能',
       });
     }
 
+    // 确保ownerId不变
+    const updateData = { ...req.body };
+    updateData.ownerId = req.user.id;
+
     // 更新账本
-    book = await Book.findByIdAndUpdate(req.params.id, req.body, {
+    book = await Book.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -471,6 +503,328 @@ exports.deleteCurrency = async (req, res) => {
     res.status(200).json({
       success: true,
       data: book,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// @desc    转让账本所有权
+// @route   POST /api/books/:id/transfer
+// @access  Private
+exports.transferBookOwnership = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newOwnerId } = req.body;
+
+    // 验证参数
+    if (!newOwnerId) {
+      return res.status(400).json({
+        success: false,
+        message: '请提供新所有者ID',
+      });
+    }
+
+    // 查找账本
+    const book = await Book.findById(id);
+
+    // 检查账本是否存在
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: '账本不存在',
+      });
+    }
+
+    // 检查当前用户是否是账本所有者
+    if (book.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: '只有账本所有者可以转让所有权',
+      });
+    }
+
+    // 记录转让历史
+    book.transferHistory = book.transferHistory || [];
+    book.transferHistory.push({
+      fromUserId: req.user.id,
+      toUserId: newOwnerId,
+      transferDate: new Date(),
+    });
+
+    // 更新所有者
+    book.ownerId = newOwnerId;
+
+    // 确保新所有者在成员列表中
+    if (!book.members.includes(newOwnerId)) {
+      book.members.push(newOwnerId);
+    }
+
+    // 保存更改
+    await book.save();
+
+    res.status(200).json({
+      success: true,
+      data: book,
+      message: '账本所有权已成功转让',
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// @desc    邀请用户加入账本
+// @route   POST /api/books/:id/invite
+// @access  Private
+exports.inviteUserToBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, permission } = req.body;
+
+    // 验证参数
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: '请提供用户邮箱',
+      });
+    }
+
+    // 查找账本
+    const book = await Book.findById(id);
+
+    // 检查账本是否存在
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: '账本不存在',
+      });
+    }
+
+    // 检查当前用户是否是账本所有者或成员
+    if (book.ownerId.toString() !== req.user.id && !book.members.includes(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: '只有账本所有者或成员可以邀请其他用户',
+      });
+    }
+
+    // 查找被邀请的用户
+    const User = require('../models/User');
+    const invitedUser = await User.findOne({ email });
+
+    if (!invitedUser) {
+      return res.status(404).json({
+        success: false,
+        message: '未找到该邮箱对应的用户',
+      });
+    }
+
+    // 检查用户是否已经是成员
+    if (book.members.includes(invitedUser._id.toString())) {
+      return res.status(400).json({
+        success: false,
+        message: '该用户已经是账本成员',
+      });
+    }
+
+    // 添加用户到成员列表
+    book.members.push(invitedUser._id);
+
+    // 设置用户权限
+    // 确保 memberPermissions 存在
+    if (!book.memberPermissions) {
+      book.memberPermissions = [];
+    }
+
+    // 检查用户是否已经有权限记录
+    const permissionIndex = book.memberPermissions.findIndex(
+      p => p.userId.toString() === invitedUser._id.toString()
+    );
+
+    // 使用前端传递的权限值，默认为 'viewer'
+    const userPermission = permission || 'viewer';
+
+    if (permissionIndex !== -1) {
+      // 更新现有权限
+      book.memberPermissions[permissionIndex].permission = userPermission;
+    } else {
+      // 添加新权限记录
+      book.memberPermissions.push({
+        userId: invitedUser._id,
+        permission: userPermission,
+        grantedAt: new Date(),
+        grantedBy: req.user.id
+      });
+    }
+
+    // 记录邀请历史
+    book.inviteHistory = book.inviteHistory || [];
+    book.inviteHistory.push({
+      invitedBy: req.user.id,
+      invitedUser: invitedUser._id,
+      inviteDate: new Date(),
+      permission: userPermission,
+    });
+
+    // 保存更改
+    await book.save();
+
+    res.status(200).json({
+      success: true,
+      data: book,
+      message: '用户已成功邀请加入账本',
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// @desc    获取账本成员
+// @route   GET /api/books/:id/members
+// @access  Private
+exports.getBookMembers = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 查找账本
+    const book = await Book.findById(id);
+
+    // 检查账本是否存在
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: '账本不存在',
+      });
+    }
+
+    // 检查当前用户是否是账本所有者或成员
+    if (book.ownerId.toString() !== req.user.id && !book.members.includes(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: '您没有权限查看此账本的成员',
+      });
+    }
+
+    // 查找所有成员的用户信息
+    const User = require('../models/User');
+    const members = await User.find({ _id: { $in: book.members } })
+      .select('_id name email username avatar');
+
+    // 为每个成员添加权限信息
+    const membersWithPermissions = members.map(member => {
+      const memberObj = member.toObject();
+      
+      // 查找成员的权限记录
+      const permissionRecord = book.memberPermissions?.find(
+        p => p.userId.toString() === member._id.toString()
+      );
+      
+      // 设置权限，默认为 'viewer'
+      memberObj.permission = permissionRecord?.permission || 'viewer';
+      
+      // 标记所有者
+      if (book.ownerId.toString() === member._id.toString()) {
+        memberObj.isOwner = true;
+        memberObj.permission = 'owner';
+      }
+      
+      return memberObj;
+    });
+
+    res.status(200).json({
+      success: true,
+      data: membersWithPermissions,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// @desc    更新成员权限
+// @route   PUT /api/books/:id/members/:userId
+// @access  Private
+exports.updateMemberPermission = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { permission } = req.body;
+
+    // 验证参数
+    if (!permission) {
+      return res.status(400).json({
+        success: false,
+        message: '请提供权限值',
+      });
+    }
+
+    // 查找账本
+    const book = await Book.findById(id);
+
+    // 检查账本是否存在
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: '账本不存在',
+      });
+    }
+
+    // 检查当前用户是否是账本所有者
+    if (book.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: '只有账本所有者可以修改成员权限',
+      });
+    }
+
+    // 检查要修改的用户是否是账本成员
+    const memberIndex = book.members.findIndex(m => m.toString() === userId);
+    if (memberIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: '该用户不是账本成员',
+      });
+    }
+
+    // 更新成员权限
+    // 如果没有 memberPermissions 字段，创建一个
+    if (!book.memberPermissions) {
+      book.memberPermissions = [];
+    }
+
+    // 查找该成员的权限记录
+    const permissionIndex = book.memberPermissions.findIndex(
+      p => p.userId.toString() === userId
+    );
+
+    if (permissionIndex !== -1) {
+      // 更新现有权限
+      book.memberPermissions[permissionIndex].permission = permission;
+    } else {
+      // 添加新权限记录
+      book.memberPermissions.push({
+        userId,
+        permission,
+      });
+    }
+
+    // 保存更改
+    await book.save();
+
+    res.status(200).json({
+      success: true,
+      data: book,
+      message: '成员权限已成功更新',
     });
   } catch (err) {
     res.status(500).json({

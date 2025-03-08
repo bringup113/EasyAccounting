@@ -103,7 +103,7 @@ export const formatTransactionsForExport = (transactions, options = {}) => {
       货币: account.currency || '',
       类别: category.name || '',
       描述: transaction.description || '',
-      相关人员: relatedPersons,
+      人员机构: relatedPersons,
       标签: relatedTags,
       创建时间: dayjs(transaction.createdAt).format(dateFormat)
     };

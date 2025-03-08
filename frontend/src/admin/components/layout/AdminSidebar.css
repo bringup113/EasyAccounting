@@ -1,0 +1,212 @@
+/* 子菜单项样式 */
+.submenu-item {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+/* 子菜单项包装器 */
+.submenu-item-wrapper {
+  width: 100%;
+  text-align: center;
+  display: block;
+}
+
+/* ===== 自定义菜单项样式 ===== */
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-item-label {
+  margin-left: 10px;
+}
+
+/* 收起菜单时隐藏标签文本 */
+.ant-menu-inline-collapsed .menu-item-label {
+  display: none;
+}
+
+/* ===== 收起菜单时的样式 ===== */
+
+/* 收起菜单时菜单项垂直居中对齐 */
+.ant-menu-inline-collapsed .ant-menu-item,
+.ant-menu-inline-collapsed .ant-menu-submenu .ant-menu-submenu-title {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 40px !important;
+  padding: 0 !important;
+  position: relative !important;
+  text-align: center !important;
+}
+
+/* 收起菜单时图标居中显示 */
+.ant-menu-inline-collapsed .ant-menu-item .anticon,
+.ant-menu-inline-collapsed .ant-menu-submenu .ant-menu-submenu-title .anticon {
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* 收起菜单时隐藏文字 */
+.ant-menu-inline-collapsed .ant-menu-item .ant-menu-title-content,
+.ant-menu-inline-collapsed .ant-menu-submenu-title .ant-menu-title-content {
+  display: none !important;
+}
+
+/* 确保收起菜单时的点击事件正常工作 */
+.ant-menu-inline-collapsed .ant-menu-item,
+.ant-menu-inline-collapsed .ant-menu-submenu-title,
+.ant-menu-inline-collapsed .ant-menu-item a,
+.ant-menu-inline-collapsed .ant-menu-submenu-title a {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* 确保收起菜单时的链接可点击 */
+.ant-menu-inline-collapsed .ant-menu-item a,
+.ant-menu-inline-collapsed .ant-menu-submenu-title a {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 2 !important;
+}
+
+/* 控制Ant Design的tooltip行为 */
+.ant-tooltip {
+  pointer-events: none !important;
+}
+
+/* 确保tooltip只在鼠标悬停时显示，点击后隐藏 */
+.ant-menu-inline-collapsed .ant-menu-item:active .ant-tooltip,
+.ant-menu-inline-collapsed .ant-menu-submenu-title:active .ant-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 修复Ant Design菜单收起时的tooltip行为 */
+.ant-menu-inline-collapsed-tooltip {
+  pointer-events: none !important;
+}
+
+/* 点击后隐藏tooltip */
+.ant-menu-item-active .ant-tooltip,
+.ant-menu-submenu-active .ant-tooltip {
+  display: none !important;
+}
+
+/* 确保tooltip只在鼠标悬停时显示，点击后隐藏 */
+.ant-menu-inline-collapsed-tooltip[data-show="true"] {
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.ant-menu-inline-collapsed-tooltip[data-show="false"] {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* 点击菜单项后隐藏tooltip */
+.ant-menu-item-selected + .ant-menu-inline-collapsed-tooltip,
+.ant-menu-submenu-selected + .ant-menu-inline-collapsed-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 自定义悬停提示 */
+.ant-menu-inline-collapsed .ant-menu-item::after,
+.ant-menu-inline-collapsed .ant-menu-submenu-title::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 0;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 鼠标悬停时显示提示 */
+.ant-menu-inline-collapsed .ant-menu-item:hover::after,
+.ant-menu-inline-collapsed .ant-menu-submenu-title:hover::after {
+  display: block;
+}
+
+/* ===== 展开菜单时的样式 ===== */
+
+/* 确保所有菜单项对齐 */
+.ant-menu-item, .ant-menu-submenu-title {
+  padding-left: 16px !important;
+}
+
+/* 调整菜单项内容的位置 */
+.ant-menu-item .ant-menu-title-content,
+.ant-menu-submenu-title .ant-menu-title-content {
+  margin-left: 10px !important;
+}
+
+/* 确保菜单项图标对齐 */
+.ant-menu-item .anticon,
+.ant-menu-submenu-title .anticon {
+  margin-right: 10px !important;
+}
+
+/* ===== 子菜单样式 ===== */
+
+/* 子菜单展开后的样式 */
+.ant-menu-inline .ant-menu-sub {
+  background: #f5f5f5 !important;
+}
+
+/* 修复子菜单右对齐问题 */
+.ant-menu-sub.ant-menu-inline {
+  padding: 0 !important;
+}
+
+/* 确保子菜单项在展开时有足够的空间 */
+.ant-menu-sub.ant-menu-inline > .ant-menu-item {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  text-align: center !important;
+}
+
+/* 移除子菜单项前的图标空间 */
+.ant-menu-sub.ant-menu-inline > .ant-menu-item .ant-menu-title-content {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  text-align: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding-right: 0 !important;
+}
+
+/* 修复子菜单项中的链接和文本对齐问题 */
+.ant-menu-sub.ant-menu-inline .ant-menu-item a,
+.ant-menu-sub.ant-menu-inline .ant-menu-item span,
+.ant-menu-sub.ant-menu-inline .ant-menu-item div {
+  text-align: center !important;
+  width: 100% !important;
+  display: block !important;
+  padding-right: 0 !important;
+}
+
+/* 强制子菜单项中的所有元素居中对齐 */
+.ant-menu-sub.ant-menu-inline .ant-menu-item * {
+  text-align: center !important;
+} 

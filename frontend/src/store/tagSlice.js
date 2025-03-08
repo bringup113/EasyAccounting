@@ -1,15 +1,36 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../services/api';
+
+// 处理标签颜色值
+const processTagColor = (tag) => {
+  if (tag && tag.color) {
+    // 如果颜色是对象，尝试转换为字符串
+    if (typeof tag.color === 'object') {
+      try {
+        tag.color = tag.color.toHexString?.() || 
+                   tag.color.toString?.() || 
+                   JSON.stringify(tag.color) === '{}' ? '#1890ff' : '#1890ff';
+      } catch (e) {
+        tag.color = '#1890ff'; // 默认蓝色
+      }
+    }
+  } else {
+    tag.color = '#1890ff'; // 默认蓝色
+  }
+  return tag;
+};
 
 // 获取标签列表
 export const fetchTags = createAsyncThunk(
   'tags/fetchTags',
   async (bookId, { rejectWithValue }) => {
     try {
-      const res = await axios.get('/api/tags', { params: { bookId } });
-      return res.data.data;
+      const res = await api.get('/tags', { params: { bookId } });
+      // 处理每个标签的颜色值
+      const processedTags = res.data.data.map(processTagColor);
+      return processedTags;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取标签失败');
     }
   }
 );
@@ -19,10 +40,12 @@ export const fetchTag = createAsyncThunk(
   'tags/fetchTag',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`/api/tags/${id}`);
-      return res.data.data;
+      const res = await api.get(`/tags/${id}`);
+      // 处理标签的颜色值
+      const processedTag = processTagColor(res.data.data);
+      return processedTag;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取标签失败');
     }
   }
 );
@@ -32,10 +55,10 @@ export const createTag = createAsyncThunk(
   'tags/createTag',
   async (tagData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('/api/tags', tagData);
+      const res = await api.post('/tags', tagData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '创建标签失败');
     }
   }
 );
@@ -45,10 +68,10 @@ export const updateTag = createAsyncThunk(
   'tags/updateTag',
   async ({ id, tagData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`/api/tags/${id}`, tagData);
+      const res = await api.put(`/tags/${id}`, tagData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '更新标签失败');
     }
   }
 );
@@ -58,10 +81,10 @@ export const deleteTag = createAsyncThunk(
   'tags/deleteTag',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/tags/${id}`);
+      await api.delete(`/tags/${id}`);
       return id;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '删除标签失败');
     }
   }
 );

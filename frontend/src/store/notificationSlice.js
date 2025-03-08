@@ -1,9 +1,31 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+// 从本地存储加载通知
+const loadNotificationsFromStorage = () => {
+  try {
+    const storedNotifications = localStorage.getItem('notifications');
+    if (storedNotifications) {
+      return JSON.parse(storedNotifications);
+    }
+  } catch (error) {
+    console.error('加载通知失败:', error);
+  }
+  return [];
+};
+
+// 保存通知到本地存储
+const saveNotificationsToStorage = (notifications) => {
+  try {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+  } catch (error) {
+    console.error('保存通知失败:', error);
+  }
+};
+
 // 添加本地通知（前端生成的通知，不需要发送到后端）
 export const addLocalNotification = createAsyncThunk(
   'notifications/addLocalNotification',
-  async (notification, { dispatch }) => {
+  async (notification, { dispatch, getState }) => {
     // 生成唯一ID
     const id = `local-${Date.now()}`;
     const newNotification = {
@@ -14,8 +36,6 @@ export const addLocalNotification = createAsyncThunk(
       isLocal: true
     };
     
-    // 移除自动清除通知的逻辑，让通知保持直到用户手动标记为已读或删除
-    
     return newNotification;
   }
 );
@@ -23,9 +43,27 @@ export const addLocalNotification = createAsyncThunk(
 // 获取通知 - 现在只返回本地存储的通知
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
-  async (_, { getState }) => {
+  async (_, { getState, dispatch }) => {
     // 从本地状态获取通知
-    return getState().notifications.notifications;
+    const notifications = getState().notifications.notifications;
+    
+    // 自动删除7天前的已读通知
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const outdatedNotifications = notifications.filter(notification => 
+      notification.isRead && new Date(notification.createdAt) < sevenDaysAgo
+    );
+    
+    if (outdatedNotifications.length > 0) {
+      console.log(`自动删除 ${outdatedNotifications.length} 条已读且超过7天的通知`);
+      // 删除过期的已读通知
+      outdatedNotifications.forEach(notification => {
+        dispatch(deleteNotification(notification._id));
+      });
+    }
+    
+    return notifications;
   }
 );
 
@@ -67,8 +105,8 @@ export const deleteAllNotifications = createAsyncThunk(
 );
 
 const initialState = {
-  notifications: [],
-  unreadCount: 0,
+  notifications: loadNotificationsFromStorage(),
+  unreadCount: loadNotificationsFromStorage().filter(n => !n.isRead).length,
   loading: false,
   error: null
 };
@@ -90,6 +128,8 @@ const notificationSlice = createSlice({
         state.loading = false;
         // 不再覆盖通知，因为我们只是从本地获取
         state.unreadCount = state.notifications.filter(n => !n.isRead).length;
+        // 保存通知到本地存储
+        saveNotificationsToStorage(state.notifications);
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.loading = false;
@@ -101,6 +141,8 @@ const notificationSlice = createSlice({
           if (index !== -1) {
             state.notifications[index] = action.payload;
             state.unreadCount = state.notifications.filter(n => !n.isRead).length;
+            // 保存通知到本地存储
+            saveNotificationsToStorage(state.notifications);
           }
         }
       })
@@ -108,19 +150,27 @@ const notificationSlice = createSlice({
         if (action.payload) {
           state.notifications = action.payload;
           state.unreadCount = 0;
+          // 保存通知到本地存储
+          saveNotificationsToStorage(state.notifications);
         }
       })
       .addCase(deleteNotification.fulfilled, (state, action) => {
         state.notifications = state.notifications.filter(n => n._id !== action.payload);
         state.unreadCount = state.notifications.filter(n => !n.isRead).length;
+        // 保存通知到本地存储
+        saveNotificationsToStorage(state.notifications);
       })
       .addCase(deleteAllNotifications.fulfilled, (state) => {
         state.notifications = [];
         state.unreadCount = 0;
+        // 保存通知到本地存储
+        saveNotificationsToStorage(state.notifications);
       })
       .addCase(addLocalNotification.fulfilled, (state, action) => {
         state.notifications.unshift(action.payload);
         state.unreadCount += 1;
+        // 保存通知到本地存储
+        saveNotificationsToStorage(state.notifications);
       });
   }
 });

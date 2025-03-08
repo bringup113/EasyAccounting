@@ -5,6 +5,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
     'Noto Color Emoji';
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 /* 主题相关样式 */
@@ -50,6 +51,8 @@ body.light-theme {
 
 .app-container {
   min-height: 100vh;
+  max-width: 100vw; /* 限制最大宽度 */
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .app-loader {
@@ -62,19 +65,25 @@ body.light-theme {
 /* 主布局样式 */
 .main-layout {
   min-height: 100vh;
+  max-width: 100vw; /* 限制最大宽度 */
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .site-layout {
   padding: 0;
   background: var(--bg-color);
+  width: 100%; /* 确保宽度不超过父容器 */
 }
 
 .main-content {
-  padding: 24px !important;
+  padding: 16px !important; /* 减小内边距 */
   margin: 0 !important;
   border-radius: 0 !important;
-  background: var(--card-bg);
-  min-height: calc(100vh - 64px - 32px);
+  background: var(--bg-color);
+  min-height: calc(100vh - 64px);
+  overflow-x: hidden; /* 防止水平滚动 */
+  width: 100%; /* 确保宽度不超过父容器 */
+  box-sizing: border-box; /* 确保padding不会增加元素宽度 */
 }
 
 /* 头部样式 */
@@ -412,22 +421,22 @@ body.light-theme {
 
 /* 统计卡片样式 */
 .stat-card {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .stat-card .ant-card-head {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 16px 24px;
-  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px;
+  background: linear-gradient(to right, rgba(248, 249, 250, 0.5), rgba(255, 255, 255, 0.3));
 }
 
 .stat-card .ant-card-head-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #262626;
+  color: var(--text-color);
   display: flex;
   align-items: center;
 }
@@ -438,7 +447,7 @@ body.light-theme {
 }
 
 .stat-card .ant-card-body {
-  padding: 24px;
+  padding: 16px;
 }
 
 .stat-card .ant-row {
@@ -486,8 +495,8 @@ body.light-theme {
 .chart-container {
   background: var(--card-bg);
   padding: 16px;
-  border-radius: 4px;
-  box-shadow: 0 1px 4px var(--shadow-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin-bottom: 16px;
 }
 
@@ -505,7 +514,10 @@ body.light-theme {
 
 .settings-card {
   background: var(--card-bg);
-  box-shadow: 0 1px 4px var(--shadow-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  padding: 16px;
 }
 
 /* 响应式调整 */
@@ -552,6 +564,14 @@ body.light-theme {
   
   .ant-card {
     margin-bottom: 12px;
+  }
+  
+  .ant-card-head {
+    padding: 12px;
+  }
+  
+  .ant-card-body {
+    padding: 12px;
   }
   
   .ant-form-item {
@@ -740,8 +760,8 @@ body.light-theme {
   padding: 24px !important;
   margin: 0 !important;
   border-radius: 0 !important;
-  background: var(--card-bg);
-  min-height: calc(100vh - 64px - 32px);
+  background: var(--bg-color);
+  min-height: calc(100vh - 64px);
 }
 
 /* 确保侧边栏正确显示 */
@@ -769,21 +789,22 @@ body.light-theme {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  background-color: var(--card-bg);
 }
 
 .ant-card-head {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 16px 24px;
-  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px;
+  background: linear-gradient(to right, rgba(248, 249, 250, 0.5), rgba(255, 255, 255, 0.3));
 }
 
 .ant-card-head-title {
   font-size: 16px;
   font-weight: 600;
-  color: #262626;
+  color: var(--text-color);
 }
 
 .ant-card-body {
-  padding: 24px;
+  padding: 16px;
 } 

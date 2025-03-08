@@ -10,6 +10,10 @@ const {
   addCurrency,
   updateCurrencyRate,
   deleteCurrency,
+  transferBookOwnership,
+  inviteUserToBook,
+  getBookMembers,
+  updateMemberPermission,
 } = require('../controllers/books');
 const { protect } = require('../middlewares/auth');
 const { getBookStats } = require('../controllers/stats');
@@ -28,11 +32,22 @@ router.route('/:id')
   .put(updateBook)
   .delete(deleteBook);
 
+// 获取账本成员
 router.route('/:id/members')
+  .get(getBookMembers)
   .post(addMember);
 
 router.route('/:id/members/:userId')
-  .delete(removeMember);
+  .delete(removeMember)
+  .put(updateMemberPermission);
+
+// 转让账本所有权
+router.route('/:id/transfer')
+  .post(transferBookOwnership);
+
+// 邀请用户加入账本
+router.route('/:id/invite')
+  .post(inviteUserToBook);
 
 // 货币管理路由
 router.route('/:id/currencies')

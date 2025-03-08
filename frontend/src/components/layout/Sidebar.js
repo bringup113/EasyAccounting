@@ -9,9 +9,14 @@ import {
   BankOutlined,
   BarChartOutlined,
   SettingOutlined,
-  RollbackOutlined
+  RollbackOutlined,
+  AppstoreOutlined,
+  TagOutlined,
+  UserOutlined,
+  DollarOutlined
 } from '@ant-design/icons';
 import { clearCurrentBook } from '../../store/bookSlice';
+import './Sidebar.css';
 
 const { Sider } = Layout;
 
@@ -26,8 +31,8 @@ const Sidebar = () => {
     // 先清除当前账本
     dispatch(clearCurrentBook());
     
-    // 直接使用window.location.href导航到根路径，确保完全刷新页面
-    window.location.href = '/';
+    // 使用React Router的navigate函数导航到根路径，避免页面刷新
+    navigate('/');
   };
 
   // 处理导航到概览页面
@@ -49,7 +54,7 @@ const Sidebar = () => {
       {
         key: 'dashboard',
         icon: <HomeOutlined />,
-        label: <a onClick={handleDashboardClick}><FormattedMessage id="nav.dashboard" defaultMessage="概览" /></a>
+        label: <button onClick={handleDashboardClick} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.dashboard" defaultMessage="概览" /></button>
       }
     ];
     
@@ -57,17 +62,42 @@ const Sidebar = () => {
       {
         key: 'accounts',
         icon: <BankOutlined />,
-        label: <Link to="/accounts"><FormattedMessage id="nav.accounts" defaultMessage="账户管理" /></Link>
+        label: <Link to="/accounts" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.accounts" defaultMessage="账户管理" /></Link>
       },
       {
         key: 'reports',
         icon: <BarChartOutlined />,
-        label: <Link to="/reports"><FormattedMessage id="nav.reports" defaultMessage="统计报表" /></Link>
+        label: <Link to="/reports" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.reports" defaultMessage="统计报表" /></Link>
+      },
+      {
+        key: 'categories',
+        icon: <AppstoreOutlined />,
+        label: <Link to="/categories" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.categories" defaultMessage="收支项目" /></Link>
+      },
+      {
+        key: 'tags',
+        icon: <TagOutlined />,
+        label: <Link to="/tags" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.tags" defaultMessage="标签管理" /></Link>
+      },
+      {
+        key: 'persons',
+        icon: <UserOutlined />,
+        label: <Link to="/persons" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.persons" defaultMessage="人员机构" /></Link>
+      },
+      {
+        key: 'book-currencies',
+        icon: <DollarOutlined />,
+        label: <Link to="/book-currency-settings" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.book-currencies" defaultMessage="货币设置" /></Link>
+      },
+      {
+        key: 'book-settings',
+        icon: <SettingOutlined />,
+        label: <Link to="/book-settings" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.book-settings" defaultMessage="账本设置" /></Link>
       },
       {
         key: 'exit-book',
         icon: <RollbackOutlined />,
-        label: <span onClick={handleExitBook}><FormattedMessage id="nav.exit-book" defaultMessage="返回账本列表" /></span>
+        label: <button onClick={handleExitBook} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.exit-book" defaultMessage="返回账本列表" /></button>
       }
     ] : [];
 
@@ -75,7 +105,7 @@ const Sidebar = () => {
       {
         key: 'settings',
         icon: <SettingOutlined />,
-        label: <Link to="/settings"><FormattedMessage id="nav.settings" defaultMessage="设置" /></Link>
+        label: <Link to="/settings" style={{ width: '100%', display: 'flex', alignItems: 'center' }}><FormattedMessage id="nav.settings" defaultMessage="设置" /></Link>
       }
     ];
 
@@ -95,6 +125,7 @@ const Sidebar = () => {
         selectedKeys={[getSelectedKey()]}
         style={{ height: '100%', borderRight: 0 }}
         items={getMenuItems()}
+        className="sidebar-menu custom-sidebar-menu"
       />
     </Sider>
   );

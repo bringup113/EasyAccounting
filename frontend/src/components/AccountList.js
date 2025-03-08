@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, List, Typography, Space, Statistic, Button, Tooltip, Divider, Tag, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { Card, List, Typography, Space, Statistic, Button, Tooltip, Tag, Row, Col } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { fetchAccounts } from '../store/accountSlice';
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -146,7 +146,7 @@ const AccountList = ({ onAddAccount, onEditAccount, onDeleteAccount, onSelectAcc
             <FormattedMessage id="account.add" defaultMessage="添加账户" />
           </Button>
         }
-        bordered={false}
+        variant="borderless"
         style={{ margin: 0, padding: 0 }}
       >
         <List

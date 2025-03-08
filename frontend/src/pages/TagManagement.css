@@ -1,0 +1,53 @@
+/* 标签管理页面样式 */
+.tag-management {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* 覆盖main-content类的样式 */
+.main-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* 标签列表样式 */
+.tag-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tag-list-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* 警告信息样式 */
+.tag-management .ant-alert {
+  margin-bottom: 24px;
+  border-radius: 8px;
+}
+
+/* 空状态样式 */
+.tag-management .ant-empty {
+  margin: 48px 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .tag-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .tag-list-header .ant-space {
+    margin-top: 16px;
+  }
+} 

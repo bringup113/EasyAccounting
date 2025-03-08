@@ -1,67 +1,67 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../services/api';
 
-// 获取人员列表
+// 获取人员/机构列表
 export const fetchPersons = createAsyncThunk(
   'persons/fetchPersons',
   async (bookId, { rejectWithValue }) => {
     try {
-      const res = await axios.get('/api/persons', { params: { bookId } });
+      const res = await api.get('/persons', { params: { bookId } });
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取人员/机构失败');
     }
   }
 );
 
-// 获取单个人员
+// 获取单个人员/机构
 export const fetchPerson = createAsyncThunk(
   'persons/fetchPerson',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`/api/persons/${id}`);
+      const res = await api.get(`/persons/${id}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '获取人员/机构失败');
     }
   }
 );
 
-// 创建人员
+// 创建人员/机构
 export const createPerson = createAsyncThunk(
   'persons/createPerson',
   async (personData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('/api/persons', personData);
+      const res = await api.post('/persons', personData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '创建人员/机构失败');
     }
   }
 );
 
-// 更新人员
+// 更新人员/机构
 export const updatePerson = createAsyncThunk(
   'persons/updatePerson',
   async ({ id, personData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`/api/persons/${id}`, personData);
+      const res = await api.put(`/persons/${id}`, personData);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '更新人员/机构失败');
     }
   }
 );
 
-// 删除人员
+// 删除人员/机构
 export const deletePerson = createAsyncThunk(
   'persons/deletePerson',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/persons/${id}`);
+      await api.delete(`/persons/${id}`);
       return id;
     } catch (err) {
-      return rejectWithValue(err.response.data.message);
+      return rejectWithValue(err.response?.data?.message || '删除人员/机构失败');
     }
   }
 );

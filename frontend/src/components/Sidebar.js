@@ -76,7 +76,7 @@ const Sidebar = ({ collapsed, onCollapse }) => {
             </Menu.Item>
             <Menu.Item key="categories" icon={<TagOutlined />}>
               <Link to="/categories">
-                <FormattedMessage id="nav.categories" defaultMessage="分类管理" />
+                <FormattedMessage id="nav.categories" defaultMessage="收支项目" />
               </Link>
             </Menu.Item>
             <Menu.Item key="tags" icon={<TagOutlined />}>
@@ -86,7 +86,7 @@ const Sidebar = ({ collapsed, onCollapse }) => {
             </Menu.Item>
             <Menu.Item key="persons" icon={<UserOutlined />}>
               <Link to="/persons">
-                <FormattedMessage id="nav.persons" defaultMessage="相关人员" />
+                <FormattedMessage id="nav.persons" defaultMessage="人员机构" />
               </Link>
             </Menu.Item>
             <Menu.Item key="reports" icon={<BarChartOutlined />}>

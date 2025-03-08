@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Dropdown, Button, Avatar, Space, Drawer, Select, Modal } from 'antd';
 import { 
   UserOutlined, 
@@ -12,7 +12,7 @@ import {
   PlusOutlined
 } from '@ant-design/icons';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { logout, loadUser } from '../../store/authSlice';
+import { logout, loadUser, logoutUser } from '../../store/authSlice';
 import { fetchBooks } from '../../store/bookSlice';
 import NotificationCenter from '../NotificationCenter';
 import SettingsModal from '../SettingsModal';
@@ -25,6 +25,7 @@ const { Option } = Select;
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const { currentBook, books } = useSelector((state) => state.books);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
@@ -33,6 +34,9 @@ const Header = () => {
   const [settingsTab, setSettingsTab] = useState('general');
   const [isCreateBookModalVisible, setIsCreateBookModalVisible] = useState(false);
   const intl = useIntl();
+  
+  // 判断当前是否在首页
+  const isHomePage = location.pathname === '/home';
 
   // 调试信息
   useEffect(() => {
@@ -53,8 +57,9 @@ const Header = () => {
   }, [dispatch]);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    dispatch(logoutUser()).then(() => {
+      window.location.href = '/login';
+    });
   };
 
   const showMobileMenu = () => {
@@ -99,6 +104,12 @@ const Header = () => {
       onClick: openProfile
     },
     {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: <FormattedMessage id="user.settings" defaultMessage="设置" />,
+      onClick: () => openSettings()
+    },
+    {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: <FormattedMessage id="user.logout" defaultMessage="退出登录" />,
@@ -106,33 +117,58 @@ const Header = () => {
     }
   ];
 
-  const mobileMenuItems = [
-    {
-      key: 'dashboard',
-      label: <FormattedMessage id="nav.dashboard" defaultMessage="仪表盘" />,
-      onClick: () => navigate('/dashboard')
-    },
-    {
-      key: 'transactions',
-      label: <FormattedMessage id="nav.transactions" defaultMessage="交易记录" />,
-      onClick: () => navigate('/transactions')
-    },
-    {
-      key: 'accounts',
-      label: <FormattedMessage id="nav.accounts" defaultMessage="账户管理" />,
-      onClick: () => navigate('/accounts')
-    },
-    {
-      key: 'reports',
-      label: <FormattedMessage id="nav.reports" defaultMessage="报表" />,
-      onClick: () => navigate('/reports')
-    },
-    {
-      key: 'settings',
-      label: <FormattedMessage id="nav.settings" defaultMessage="设置" />,
-      onClick: () => openSettings()
+  // 移动端菜单项
+  const getMobileMenuItems = () => {
+    // 如果在首页，只显示设置和首页菜单项
+    if (isHomePage) {
+      return [
+        {
+          key: 'home',
+          label: <FormattedMessage id="nav.home" defaultMessage="首页" />,
+          onClick: () => navigate('/home')
+        },
+        {
+          key: 'settings',
+          label: <FormattedMessage id="nav.settings" defaultMessage="设置" />,
+          onClick: () => openSettings()
+        }
+      ];
     }
-  ];
+    
+    // 如果不在首页，显示完整菜单
+    return [
+      {
+        key: 'home',
+        label: <FormattedMessage id="nav.home" defaultMessage="首页" />,
+        onClick: () => navigate('/home')
+      },
+      {
+        key: 'dashboard',
+        label: <FormattedMessage id="nav.dashboard" defaultMessage="仪表盘" />,
+        onClick: () => navigate('/dashboard')
+      },
+      {
+        key: 'transactions',
+        label: <FormattedMessage id="nav.transactions" defaultMessage="交易记录" />,
+        onClick: () => navigate('/transactions')
+      },
+      {
+        key: 'accounts',
+        label: <FormattedMessage id="nav.accounts" defaultMessage="账户管理" />,
+        onClick: () => navigate('/accounts')
+      },
+      {
+        key: 'reports',
+        label: <FormattedMessage id="nav.reports" defaultMessage="报表" />,
+        onClick: () => navigate('/reports')
+      },
+      {
+        key: 'settings',
+        label: <FormattedMessage id="nav.settings" defaultMessage="设置" />,
+        onClick: () => openSettings()
+      }
+    ];
+  };
 
   // 创建账本菜单项
   const bookMenuItems = books && books.length > 0 ? [
@@ -149,7 +185,7 @@ const Header = () => {
 
   const bookMenu = { items: bookMenuItems, onClick: handleBookChange };
   const userMenu = { items: userMenuItems };
-  const mobileMenu = <Menu mode="inline" theme="light" items={mobileMenuItems} />;
+  const mobileMenu = <Menu mode="inline" theme="light" items={getMobileMenuItems()} />;
 
   return (
     <>
@@ -161,7 +197,7 @@ const Header = () => {
             onClick={showMobileMenu}
             className="mobile-menu-button"
           />
-          {books && books.length > 0 && currentBook && (
+          {!isHomePage && books && books.length > 0 && currentBook && (
             <Dropdown menu={bookMenu} trigger={['click']}>
               <Button type="link" className="book-dropdown-button">
                 <Space>
@@ -177,12 +213,6 @@ const Header = () => {
         <div className="header-right">
           <Space size="large">
             <NotificationCenter />
-            <Button 
-              type="link" 
-              icon={<SettingOutlined />} 
-              onClick={() => openSettings()}
-              className="header-icon-button"
-            />
             <Dropdown menu={userMenu} trigger={['click']}>
               <Button type="link" className="user-dropdown-button">
                 <Space>

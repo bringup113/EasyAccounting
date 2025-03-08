@@ -1,0 +1,143 @@
+/* 交易记录管理页面样式 */
+.transaction-management {
+  margin: 0;
+  padding: 0;
+}
+
+/* 日历卡片样式 */
+.calendar-card {
+  height: 100%;
+}
+
+.calendar-card .ant-picker-calendar {
+  background: transparent;
+}
+
+.calendar-card .ant-picker-calendar-date {
+  height: auto;
+  padding: 4px;
+  margin: 0;
+}
+
+.calendar-card .ant-picker-calendar-date-value {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  width: 28px;
+  margin: 0 auto;
+  border-radius: 50%;
+  position: relative;
+}
+
+/* 今天日期的小红点标识 */
+.calendar-card .ant-picker-calendar-date-today .ant-picker-calendar-date-value::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  background-color: #f5222d;
+  border-radius: 50%;
+}
+
+.calendar-card .ant-picker-calendar-date-today .ant-picker-calendar-date-value {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.calendar-card .ant-picker-calendar-date-selected .ant-picker-calendar-date-value {
+  background: #1890ff;
+  color: #fff;
+}
+
+/* 日期范围信息 */
+.date-range-info {
+  margin-bottom: 16px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* 日期单元格样式 */
+.date-cell {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0;
+  position: relative;
+  padding: 4px;
+  background-color: #fff; /* 确保有背景色 */
+}
+
+.date-cell.start-date {
+  background-color: #1890ff;
+  color: white;
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
+.date-cell.end-date {
+  background-color: #1890ff;
+  color: white;
+  border-top-right-radius: 50%;
+  border-bottom-right-radius: 50%;
+}
+
+.date-cell.in-range {
+  background-color: #e6f7ff;
+}
+
+/* 今天日期的小红点标识 */
+.date-cell.today::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: #f5222d;
+  border-radius: 50%;
+}
+
+/* 修复日历表格样式 */
+.calendar-card .ant-picker-calendar-date-content {
+  height: auto !important;
+  line-height: normal;
+}
+
+.calendar-card .ant-picker-cell {
+  padding: 1px;
+}
+
+.calendar-card .ant-picker-calendar table {
+  table-layout: fixed;
+}
+
+/* 确保日历单元格内容可见 */
+.calendar-card .ant-picker-cell-in-view {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.calendar-card .ant-picker-cell-disabled {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.calendar-card .ant-picker-cell-disabled .ant-picker-calendar-date-value {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.calendar-card .ant-picker-cell-disabled .date-cell {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .transaction-management .ant-row {
+    margin-bottom: 16px;
+  }
+} 

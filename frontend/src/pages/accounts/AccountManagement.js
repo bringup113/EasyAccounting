@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, Modal, Empty, 
-  Typography, Space, Alert, App, Button, Row, Col, List, Tooltip, Tag
+  Typography, Alert, App, Button, List, Tooltip, Tag
 } from 'antd';
 import { 
   PlusOutlined, EditOutlined, DeleteOutlined, 
   WalletOutlined, ArrowUpOutlined, ArrowDownOutlined,
-  ExclamationCircleOutlined, InfoCircleOutlined, BankOutlined
+  InfoCircleOutlined, BankOutlined
 } from '@ant-design/icons';
 import { fetchAccounts, deleteAccount } from '../../store/accountSlice';
-import AccountList from '../../components/AccountList';
 import AccountForm from '../../components/AccountForm';
 import { FormattedMessage, useIntl } from 'react-intl';
 import './AccountManagement.css';
-
-const { Title, Text } = Typography;
 
 const AccountManagement = () => {
   const dispatch = useDispatch();
@@ -172,7 +169,7 @@ const AccountManagement = () => {
 
   if (!currentBook) {
     return (
-      <Card bordered={false} style={{ margin: 0, height: '100%' }}>
+      <Card variant="borderless" style={{ margin: 0, height: '100%' }}>
         <Empty description={<FormattedMessage id="book.selectFirst" defaultMessage="请先选择或创建一个账本" />} />
       </Card>
     );
@@ -181,7 +178,7 @@ const AccountManagement = () => {
   return (
     <div className="account-management" style={{ margin: 0, padding: 0 }}>
       <Card 
-        bordered={false} 
+        variant="borderless" 
         title={
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <BankOutlined style={{ marginRight: 12, fontSize: 20 }} />

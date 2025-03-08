@@ -22,7 +22,7 @@ const Login = () => {
   useEffect(() => {
     // 如果已经登录，重定向到首页
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/home');
     }
 
     // 显示错误信息
@@ -47,8 +47,8 @@ const Login = () => {
       // 登录成功后立即加载用户信息
       await dispatch(loadUser()).unwrap();
       
-      // 登录成功后重定向
-      navigate('/');
+      // 登录成功后强制重定向到新的首页
+      window.location.href = '/home';
     } catch (error) {
       // 错误已经在useEffect中处理
     } finally {

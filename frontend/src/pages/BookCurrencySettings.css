@@ -1,0 +1,60 @@
+.book-currency-settings-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.description-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.tips-section {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f0f7ff;
+  border-radius: 4px;
+  border-left: 4px solid #1890ff;
+}
+
+.tips-section ul {
+  margin-top: 8px;
+  padding-left: 20px;
+}
+
+.tips-section li {
+  margin-bottom: 4px;
+}
+
+/* 表格样式 */
+.currency-action-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.set-default-button {
+  width: 90px;
+  text-align: center;
+  display: inline-block;
+}
+
+/* 深色模式适配 */
+.dark-theme .description-section {
+  background-color: #1f1f1f;
+}
+
+.dark-theme .tips-section {
+  background-color: #111d2c;
+  border-left-color: #177ddc;
+} 

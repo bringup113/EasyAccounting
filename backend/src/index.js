@@ -8,6 +8,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protect } = require('./middlewares/auth');
+const { initSystemAdmin } = require('./models/Admin');
+const { initScheduledTasks } = require('./utils/scheduledTasks');
 
 // 加载环境变量
 dotenv.config();
@@ -16,7 +18,12 @@ dotenv.config();
 const app = express();
 
 // 中间件
-app.use(cors());
+app.use(cors({
+  origin: '*', // 允许所有源
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,6 +92,9 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/tags', require('./routes/tags'));
 app.use('/api/persons', require('./routes/persons'));
 app.use('/api/accounts', require('./routes/accounts'));
+app.use('/api/admin-users', require('./routes/adminUsers'));
+app.use('/api/admin-books', require('./routes/adminBooks'));
+app.use('/api/admins', require('./routes/admins'));
 // TODO: 预算功能尚未实现
 // app.use('/api/budgets', require('./routes/budgets'));
 
@@ -122,14 +132,25 @@ app.get('/', (req, res) => {
   res.send('记账软件API正在运行');
 });
 
+// 错误处理中间件
+const errorHandler = require('./middlewares/error');
+app.use(errorHandler);
+
 // 连接数据库
 mongoose
   .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finance-tracker', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log('MongoDB连接成功');
+    
+    // 初始化系统管理员
+    await initSystemAdmin();
+    
+    // 初始化定时任务
+    initScheduledTasks();
+    
     // 启动服务器
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, '0.0.0.0', () => {

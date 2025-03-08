@@ -188,10 +188,12 @@ const bookSlice = createSlice({
       .addCase(fetchBook.fulfilled, (state, action) => {
         state.loading = false;
         state.currentBook = action.payload;
+        console.log('fetchBook.fulfilled - 获取到的账本数据:', action.payload);
       })
       .addCase(fetchBook.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        console.error('fetchBook.rejected - 获取账本数据失败:', action.payload);
       })
       .addCase(createBook.pending, (state) => {
         state.loading = true;
@@ -201,6 +203,7 @@ const bookSlice = createSlice({
         state.books.push(action.payload);
         state.currentBook = action.payload;
         localStorage.setItem('currentBookId', action.payload._id);
+        console.log('createBook.fulfilled - 创建的账本数据:', action.payload);
       })
       .addCase(createBook.rejected, (state, action) => {
         state.loading = false;
